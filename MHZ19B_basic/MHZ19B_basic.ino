@@ -36,9 +36,10 @@ CRGB led_data[LED_NUM];               // LED strip data
 //=============================================================================
 
 // CO2 data storage (used for gliding average filter)
-#define CO2_DATA_LEN  60
-uint16_t co2_data[CO2_DATA_LEN];
+#define CO2_DATA_MAX  60
+uint16_t co2_data[CO2_DATA_MAX] = {0};
 size_t co2_data_index = 0;  // Next put position
+size_t co2_data_len = 0;    // Stored data points
 
 //=============================================================================
 
@@ -76,15 +77,15 @@ void co2_task(void)
     // CO2 Filter
     // TODO: Gliding average should be replaced by a proper filter function.
     co2_data[co2_data_index] = co2;
-    if (++co2_data_index >= CO2_DATA_LEN)  
+    if (++co2_data_index >= CO2_DATA_MAX)
         co2_data_index = 0;
+    if (co2_data_len < CO2_DATA_MAX)
+        co2_data_len++;
 
     uint32_t co2_avg = 0;
-    for(size_t i=0; i<CO2_DATA_LEN; i++)
-    {
+    for (size_t i=0; i<co2_data_len; i++)
         co2_avg += co2_data[i];
-    }
-    co2_avg /= CO2_DATA_LEN;
+    co2_avg /= co2_data_len;
 
     Serial.print("co2: ");      Serial.print(co2);      Serial.print("  ");
     Serial.print("co2_avg: ");  Serial.print(co2_avg);  Serial.print("  ");
@@ -97,7 +98,7 @@ void co2_task(void)
     else if (co2_avg > CO2_THRESHOLD_YELLOW)
         co2_color = CRGB::Yellow;
 
-    for(int i=0; i<LED_NUM; i++)
+    for (size_t i=0; i<LED_NUM; i++)
         led_data[i] = co2_color;
     FastLED.show();   
 }
