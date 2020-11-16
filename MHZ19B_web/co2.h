@@ -44,7 +44,7 @@ void handleSensor(void)
   Serial.print("temp: ");     Serial.print(temp);     Serial.println();
 
   // LED traffic light display
-  CRGB co2_color = CRGB::Orange;
+  CRGB co2_color = CRGB::DarkOrange;
   int co2=device.co2_sum/device.co2_count;
   if (co2 > cfg.high)
     co2_color = CRGB::Red;
@@ -59,6 +59,7 @@ void handleSensor(void)
     device.lastData = millis();
     client.startDataFrame(BayEOS_Int16le);
     client.addChannelValue(co2);
+    client.addChannelValue(temp);
     client.writeToBuffer();
     //Send current frame via Websocket to connected devices
     sendFrames(); 

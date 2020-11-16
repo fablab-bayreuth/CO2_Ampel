@@ -5,7 +5,7 @@ String mes; //global String!
 uint8_t sd_buffer[1024];
 char char_buffer[50]; //global Buffer for chars
 
-#define CONFIG_SIGNATURE 0xfab1ab24
+#define CONFIG_SIGNATURE 0xfab1ab25
 
 struct MyCONFIG
 {
@@ -48,8 +48,8 @@ void message(const String& s) {
 void eraseConfig() {
   // Reset EEPROM bytes to '0' for the length of the data structure
   cfg.sig = CONFIG_SIGNATURE;
-  strcpy(cfg.ssid, "CO2Ampel");
-  strcpy(cfg.password, "fablab24");
+  strcpy(cfg.ssid, "CO2-Ampel");
+  strcpy(cfg.password, "");
   cfg.mode = 0;
   cfg.autocalibration=true;
   cfg.low = 1000;

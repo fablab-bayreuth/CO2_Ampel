@@ -70,9 +70,9 @@ connection.onmessage = function(e) {
 		break;
 	case "data":
 		$('#co2').html(msg.co2);
-		if(msg.co2<limit_low) $('#ampel').attr('src','Ampel_gr.svg');
-		else if(msg.co2>limit_high) $('#ampel').attr('src','Ampel_ro.svg');
-		else $('#ampel').attr('src','Ampel_ge.svg');
+		if(msg.co2<limit_low) set_col(0,0,1);
+		else if(msg.co2>limit_high) set_col(1,0,0);
+		else set_col(0,1,0);
 		break;
 	//TODO: add further events to handle
 	}

@@ -31,6 +31,8 @@
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 #include <DNSServer.h>
+DNSServer dns;
+#define DNS_PORT 53
 
 #include <ESP8266WebServer.h>
 ESP8266WebServer server(80);
@@ -42,7 +44,7 @@ WebSocketsServer webSocket(81);    // create a websocket server on port 81
   Rückblick auf -> 200*(SAMPLING_INT * CO2_ARRAY_LENGTH) -> z.B. 5,5h
 */
 #include <BayEOSBufferRAM.h>
-#define BUFFER_SIZE 2000
+#define BUFFER_SIZE 4000
 uint8_t buffer[BUFFER_SIZE];
 BayEOSBufferRAM myBuffer(buffer, BUFFER_SIZE);
 
@@ -58,6 +60,14 @@ BayESP8266 client;
 
 
 void setup(void) {
+  // WS2812B LED strip init
+  FastLED.addLeds< NEOPIXEL, LED_DATA_PIN >(led_data, LED_NUM);
+  FastLED.setBrightness(LED_BRIGHTNESS);
+  
+  for (size_t i = 0; i < LED_NUM; i++)
+    led_data[i] = CRGB::Black;
+  FastLED.show();
+
   Serial.begin(115200);
   client.setBuffer(myBuffer);
   EEPROM.begin(sizeof(cfg));
@@ -85,8 +95,8 @@ void setup(void) {
       client.setConfig(cfg.bayeos_name, cfg.bayeos_gateway, "80", "gateway/frame/saveFlat", cfg.bayeos_user, cfg.bayeos_pw);
     } else {
       Serial.println("Connection failed - Falling back to default AP-Mode");
-      strcpy(cfg.ssid, "CO2Ampel");
-      strcpy(cfg.password, "fablab24");
+      strcpy(cfg.ssid, "CO2-Ampel");
+      strcpy(cfg.password, "");
       cfg.mode = 0;
     }
   }
@@ -94,11 +104,19 @@ void setup(void) {
   if (cfg.mode == 0) {
     Serial.println("Starting own network...");
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(cfg.ssid, cfg.password);
-    delay(100);
     IPAddress Ip(192, 168, 4, 1);
     IPAddress NMask(255, 255, 255, 0);
     WiFi.softAPConfig(Ip, Ip, NMask);
+    if (strlen(cfg.password)) {
+      WiFi.softAP(cfg.ssid, cfg.password);
+    } else {
+      WiFi.softAP(cfg.ssid);
+    }
+    /* Setup the DNS server redirecting all the domains to the apIP */
+    dns.setErrorReplyCode(DNSReplyCode::NoError);
+    dns.start(DNS_PORT, "*", WiFi.softAPIP());
+    
+    delay(100);
   }
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
@@ -110,13 +128,14 @@ void setup(void) {
   mySerial.begin(MHZ19_BAUDRATE);                               // (Uno example) device to MH-Z19 serial start
   myMHZ19.begin(mySerial);                                // *Serial(Stream) refence must be passed to library begin().
   myMHZ19.autoCalibration(cfg.autocalibration);                              // Turn auto calibration ON (OFF autoCalibration(false))
-  myMHZ19.getCO2();   
-  
-
-  // WS2812B LED strip init
-  FastLED.addLeds< NEOPIXEL, LED_DATA_PIN >(led_data, LED_NUM);
-  FastLED.setBrightness(LED_BRIGHTNESS);
-
+ 
+  // Run 8 measurements to avoid high values at startup
+  for (size_t i = 0; i < LED_NUM; i++){
+    led_data[i] = CRGB::SkyBlue;
+    myMHZ19.getCO2();
+    FastLED.show();
+    delay(5000);
+  }
 
 }
 
@@ -128,4 +147,6 @@ void loop(void) {
   if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
     handleSensor();
   }
+  if(cfg.mode==0)
+    dns.processNextRequest();
 }

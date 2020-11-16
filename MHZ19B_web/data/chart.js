@@ -18,10 +18,11 @@ function parseFrame(data) {
 	if (typeof f.data === undefined)
 		return;
 	x = f.ts;
-	//I only expect one channel in the frame!
+	var i=0;
 	for ( var ch in f.data) {
-		shift = chart.series[0].data.length > 200;
-		chart.series[0].addPoint([ x, f.data[ch] ], !0, shift, !1)
+		shift = chart.series[i].data.length > 200;
+		chart.series[i].addPoint([ x, f.data[ch] ], !0, shift, !1)
+		i++;
 	}
 
 }
