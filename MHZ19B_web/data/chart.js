@@ -20,9 +20,10 @@ function parseFrame(data) {
 	x = f.ts;
 	var i=0;
 	for ( var ch in f.data) {
-		shift = chart.series[i].data.length > 200;
+		shift = chart.series[i].data.length > 400;
 		chart.series[i].addPoint([ x, f.data[ch] ], !0, shift, !1)
 		i++;
+		break; //only take first value in frame
 	}
 
 }

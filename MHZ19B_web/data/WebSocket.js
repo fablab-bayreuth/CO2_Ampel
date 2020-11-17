@@ -18,6 +18,7 @@ connection.onopen = function() {
 	//here we do nothing
 	var msg = {
 			command : "getAll",
+			time : Math.floor((Date.now()-t2000.getTime())/1000)
 	};
 	console.log(msg);
 	connection.send(JSON.stringify(msg))
@@ -49,6 +50,8 @@ connection.onmessage = function(e) {
 		}, 3000)
 		break
 	case "conf":
+		$('#ssid_h1').html(msg.name)
+		$('#name').val(msg.name)
 		$('#ssid').val(msg.ssid)
 		$('#password').val(msg.password)
 		$('#mode').val(msg.mode)
@@ -57,6 +60,10 @@ connection.onmessage = function(e) {
 		limit_low=parseInt(msg.low)
 		$('#high').val(msg.high)
 		limit_high=parseInt(msg.high)
+		$('#blink').val(msg.blink)
+		limit_blink=parseInt(msg.blink)
+		$('#ampel_start').val(msg.ampel_start)
+		$('#ampel_end').val(msg.ampel_end)
 		$('#bayeos_name').val(msg.bayeos_name)
 		$('#bayeos_gateway').val(msg.bayeos_gateway)
 		$('#bayeos_user').val(msg.bayeos_user)
@@ -74,6 +81,10 @@ connection.onmessage = function(e) {
 		else if(msg.co2>limit_high) set_col(1,0,0);
 		else set_col(0,1,0);
 		break;
+	case "blink":
+		if(msg.off) set_col(0,0,0);
+		else set_col(1,0,0);
+		break;
 	//TODO: add further events to handle
 	}
 };
@@ -87,19 +98,24 @@ connection.onclose = function() {
 function saveConf() {
 	var low = parseInt($('#low').val())
 	var high = parseInt($('#high').val())
+	var blink = parseInt($('#blink').val())
 
-	if (isNaN(low) || isNaN(high) ) {
+	if (isNaN(low) || isNaN(high) || isNaN(blink) ) {
 		alert("Achtung: Die Grenzen müssen Ganzzahlen sein!")
 		return
 	}
 	var msg = {
 			command : "setConf",
+			name : $('#name').val(),
 			ssid : $('#ssid').val(),
 			password : $('#password').val(),
 			mode : parseInt($('#mode').val()),
 			autocalibration : parseInt($('#autocalibration').val()),
 			low: low,
 			high: high,
+			blink: blink,
+			ampel_start : parseInt($('#ampel_start').val()),
+			ampel_end : parseInt($('#ampel_end').val()),
 			bayeos_name : $('#bayeos_name').val(),
 			bayeos_gateway : $('#bayeos_gateway').val(),
 			bayeos_user : $('#bayeos_user').val(),

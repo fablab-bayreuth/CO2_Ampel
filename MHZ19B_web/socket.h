@@ -9,6 +9,8 @@ StaticJsonDocument<1024> doc;
 void sendConfig(int num=-1) {
   mes = F("{\"event\":\"conf\",\"ssid\":\"");
   mes += cfg.ssid;
+  mes += F("\",\"name\":\"");
+  mes += cfg.name;
   mes += F("\",\"password\":\"");
   mes += cfg.password;
   mes += F("\",\"mode\":");
@@ -19,6 +21,12 @@ void sendConfig(int num=-1) {
   mes += cfg.low;
   mes += F(",\"high\":");
   mes += cfg.high;
+  mes += F(",\"blink\":");
+  mes += cfg.blink;
+  mes += F(",\"ampel_start\":");
+  mes += cfg.ampel_start;
+  mes += F(",\"ampel_end\":");
+  mes += cfg.ampel_end;
   mes += F(",\"bayeos_name\":\"");
   mes += cfg.bayeos_name;
   mes += F("\",\"bayeos_gateway\":\"");
@@ -33,9 +41,16 @@ void sendConfig(int num=-1) {
 }
 
 void sendCO2(void) {
-  mes = F("{\"event\":\"data\",\"co2\":\"");
-  mes += (device.co2_sum / device.co2_count);
-  mes += "\"}";
+  mes = F("{\"event\":\"data\",\"co2\":");
+  mes += device.co2_current;
+  mes += "}";
+  webSocket.broadcastTXT(mes);
+}
+
+void sendBlink(void) {
+  mes = F("{\"event\":\"blink\",\"off\":");
+  mes += device.led_blink;
+  mes += "}";
   webSocket.broadcastTXT(mes);
 }
 
@@ -138,6 +153,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         }
 
         //Got a message with new config values!
+        strncpy(cfg.name, doc["name"], 19);
+        cfg.name[19] = 0;
+        if (strlen(doc["name"]) > 19) {
+          error(String(F("Name to long! Truncated")));
+        }
         strncpy(cfg.ssid, doc["ssid"], 19);
         cfg.ssid[19] = 0;
         if (strlen(doc["ssid"]) > 19) {
@@ -149,6 +169,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         cfg.autocalibration = doc["autocalibration"];
         cfg.low = doc["low"];
         cfg.high = doc["high"];
+        cfg.blink = doc["blink"];
+        cfg.ampel_start = doc["ampel_start"];
+        cfg.ampel_end = doc["ampel_end"];
         strncpy(cfg.bayeos_name, doc["bayeos_name"], 49);
         cfg.bayeos_name[49] = 0;
         strncpy(cfg.bayeos_gateway, doc["bayeos_gateway"], 49);
@@ -158,6 +181,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         strncpy(cfg.bayeos_pw, doc["bayeos_pw"], 49);
         cfg.bayeos_pw[49] = 0;
         saveConfig(); //save to EEPROM - defined in config.h
+        device.lastOnOff=millis()-60000; //Will check for updated on/off-time
         client.setConfig(cfg.bayeos_name, cfg.bayeos_gateway, "80", "gateway/frame/saveFlat", cfg.bayeos_user, cfg.bayeos_pw);
         message(String(F("new config saved to EEPROM")));
         myMHZ19.autoCalibration(cfg.autocalibration);
@@ -170,6 +194,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
       }
 
       if (strcmp(command, "getAll") == 0) {
+        unsigned long time = doc["time"];
+        myRTC.adjust(time);
+        device.time_is_set=true;
         sendConfig(num);
         delay(2);
         sendCO2();

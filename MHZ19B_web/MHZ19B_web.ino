@@ -25,6 +25,8 @@
 
 */
 #define ADMIN_PASSWORD "fab4admins"
+#define DEFAULT_SSID "CO2-Ampel"
+#define LED_DATA_PIN      D3     // LED strip Din
 #define SAMPLING_INT 10 /* Sampling Intervall */
 #define CO2_ARRAY_LEN 10 /* Anzahl Werte in Mittelung */
 
@@ -47,6 +49,7 @@ WebSocketsServer webSocket(81);    // create a websocket server on port 81
 #define BUFFER_SIZE 4000
 uint8_t buffer[BUFFER_SIZE];
 BayEOSBufferRAM myBuffer(buffer, BUFFER_SIZE);
+RTC_Millis myRTC;
 
 /* BayEOS-Client - um Daten an eine BayEOS-Gateway zu schicken*/
 #include <BayEOS-ESP8266.h>
@@ -57,6 +60,7 @@ BayESP8266 client;
 #include "co2.h"
 #include "socket.h"
 #include "handler.h"
+#include "localtime_DE.h"
 
 
 void setup(void) {
@@ -131,7 +135,7 @@ void setup(void) {
  
   // Run 8 measurements to avoid high values at startup
   for (size_t i = 0; i < LED_NUM; i++){
-    led_data[i] = CRGB::SkyBlue;
+    led_data[i] = CRGB::DarkBlue;
     myMHZ19.getCO2();
     FastLED.show();
     delay(5000);
@@ -147,6 +151,28 @@ void loop(void) {
   if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
     handleSensor();
   }
+  //Handle DNS-Request
   if(cfg.mode==0)
     dns.processNextRequest();
+
+  //Blink Red LED
+  if(device.co2_current>cfg.blink && (millis() - device.lastBlink)>1000){
+    device.lastBlink=millis();
+    device.led_blink= !device.led_blink;
+    handleLED();
+    sendBlink();
+  }
+
+  //Check ON/OFF
+  if(device.time_is_set && (cfg.ampel_start || cfg.ampel_end) && (millis() - device.lastOnOff)>60000){
+   device.lastOnOff=millis();
+   DateTime utc;
+   utc = DateTime(myRTC.sec()+3600);
+   utc = DateTime(utc.year(), utc.month(), utc.day());
+   
+   device.led_off=false;
+   if(cfg.ampel_start && myRTC.sec()<(utc.get() - getShift(utc) + 60 * cfg.ampel_start)) device.led_off=true;
+   if(cfg.ampel_end && myRTC.sec()>(utc.get()- getShift(utc) + 60 * cfg.ampel_end)) device.led_off=true; 
+   handleLED();
+  }
 }

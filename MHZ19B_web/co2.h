@@ -8,7 +8,6 @@
 #define MHZ19_BAUDRATE   9600            // Device to MH-Z19 Serial MHZ19_BAUDRATE (should not be changed)
 
 // LED strip
-#define LED_DATA_PIN      2     // LED strip Din
 #define LED_NUM           8     // Number of LEDs 
 #define LED_BRIGHTNESS    96    // define LED LED_BRIGHTNESS
 
@@ -24,42 +23,52 @@ CRGB led_data[LED_NUM];               // LED strip data
 void sendCO2();
 void sendFrames(bool full = false,int num=0);
 
+void handleLED(void){
+	  // LED traffic light display
+	  CRGB co2_color = CRGB::DarkOrange;
+
+	  if (device.co2_current > cfg.high)
+	    co2_color = CRGB::Red;
+	  else if (device.co2_current < cfg.low)
+	    co2_color = CRGB::Green;
+
+    if(device.co2_current<=cfg.blink) device.led_blink=false;
+    
+	  if(device.led_off || device.led_blink) co2_color = CRGB::Black;
+
+	  for (size_t i = 0; i < LED_NUM; i++)
+	    led_data[i] = co2_color;
+	  FastLED.show();
+
+}
+
 void handleSensor(void)
 {
   device.lastCO2 = millis();
   // Measurements
   if(device.co2_count==CO2_ARRAY_LEN){
-    device.co2_sum-=device.co2[device.co2_current];
+    device.co2_sum-=device.co2[device.co2_index];
     device.co2_count--;
   }
-  device.co2[device.co2_current] = myMHZ19.getCO2();                   // CO2 concentration (in ppm);
-  Serial.print("co2: ");      Serial.print(device.co2[device.co2_current]);      Serial.print("  ");
-  device.co2_sum+=device.co2[device.co2_current];
-  device.co2_current++;
+  device.co2[device.co2_index] = myMHZ19.getCO2();                   // CO2 concentration (in ppm);
+  Serial.print("co2: ");      Serial.print(device.co2[device.co2_index]);      Serial.print("  ");
+  device.co2_sum+=device.co2[device.co2_index];
+  device.co2_index++;
   device.co2_count++;
-  if(device.co2_current==CO2_ARRAY_LEN) device.co2_current=0;
+  if(device.co2_index==CO2_ARRAY_LEN) device.co2_index=0;
+  device.co2_current=device.co2_sum/device.co2_count;
   sendCO2();
  
   uint16_t temp = myMHZ19.getTemperature();     // Temperature (in degrees Celsius)
   Serial.print("temp: ");     Serial.print(temp);     Serial.println();
 
-  // LED traffic light display
-  CRGB co2_color = CRGB::DarkOrange;
-  int co2=device.co2_sum/device.co2_count;
-  if (co2 > cfg.high)
-    co2_color = CRGB::Red;
-  else if (co2 < cfg.low)
-    co2_color = CRGB::Green;
-  for (size_t i = 0; i < LED_NUM; i++)
-    led_data[i] = co2_color;
-  FastLED.show();
+  handleLED();
 
   //Save Data
   if ((millis() - device.lastData) > (1000*SAMPLING_INT*CO2_ARRAY_LEN)) {
     device.lastData = millis();
     client.startDataFrame(BayEOS_Int16le);
-    client.addChannelValue(co2);
-    client.addChannelValue(temp);
+    client.addChannelValue(device.co2_current);
     client.writeToBuffer();
     //Send current frame via Websocket to connected devices
     sendFrames(); 
