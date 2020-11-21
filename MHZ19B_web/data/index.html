@@ -147,7 +147,8 @@ function set_col( c1, c2, c3 ) {
 		<tr><th colspan=2>Daten Download</th></tr>
 		<tr><td colspan=2>Datensätze gesamt: <span id="buffer_total">xx</span><br/>
 		Datensätze neu: <span id="buffer_neu">xx</span><br/>
-		Datensätze max: <span id="buffer_max">xx</span></td></tr>
+		Datensätze max: <span id="buffer_max">xx</span><br/>
+		Datensätze pro Tag: <span id="buffer_tag">xx</span></td></tr>
 					<tr><td colspan=2>
 			<input type="radio" name="dl_size" id="dl_new" style="width:20px;" checked value="0"><label for="dl_new" id="dl_new_l"> Nur neue Daten seit letztem Download</label><br/>
 			<input type="radio" name="dl_size" id="dl_full" style="width:20px;" value="-1"><label for="dl_full" id="dl_full_l"> Alles herunterladen</label><br/>
@@ -170,8 +171,7 @@ function set_col( c1, c2, c3 ) {
 			</td></tr>
 			<tr>
 			<td>Dateiformat</td>
-			<td><select id="dl_format"><option value="0">BayEOS bdb-Datei</option>
-			<option value="1">csv-Datei</option></select>
+			<td><select id="dl_format"><option value="1">csv-Datei</option><option value="0">BayEOS bdb-Datei</option></select>
 			<tr>
 				<td colspan=2><input id="dl" class="logger" type="button"
 					value="Herunterladen" onClick="download()"></td>
@@ -291,7 +291,7 @@ $("#mode").change(function(){
 <p>
 CO2-Ampel (c) Fablab Bayreuth
 </p>
-<p>Frontend Version 0.0.4<br/>
+<p>Frontend Version 0.0.5<br/>
 Backend Version <span id="esp_version">X.Y.Z</span>
 </p>
 </div>

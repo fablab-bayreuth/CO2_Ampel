@@ -25,6 +25,12 @@ void sendConfig(int num = -1) {
   mes += cfg.blink;
   mes += F(",\"socket_id\":");
   mes += num;
+  mes += F(",\"sampling_int\":");
+  mes += SAMPLING_INT;
+  mes += F(",\"co2_array_len\":");
+  mes += CO2_ARRAY_LEN;
+  mes += F(",\"frame_size\":");
+  mes += FRAME_SIZE;
   mes += F(",\"ampel_start\":");
   mes += cfg.ampel_start;
   mes += F(",\"ampel_end\":");
@@ -65,12 +71,14 @@ void sendFrames(bool full, int num) {
   char df_buffer[102];
   unsigned long timestamp;
   unsigned long read_pos = myBuffer.readPos();
+  unsigned long ram_ts;
   if (full) {
     myBuffer.seekReadPointer(myBuffer.endPos());
     while (myBuffer.available()) {
       myBuffer.initNextPacket();
       df_buffer[0] = BayEOS_DelayedFrame;
       timestamp=millis() - myBuffer.packetMillis();
+      if(! ram_ts) ram_ts=myRTC.sec()-timestamp/1000;
       memcpy(df_buffer + 1,(uint8_t*) &timestamp,4); 
       myBuffer.readPacket((uint8_t*)df_buffer + 5);
       base64_encode(tmp, df_buffer, myBuffer.packetLength() + 5);
@@ -84,10 +92,10 @@ void sendFrames(bool full, int num) {
       yield();
     }
     myBuffer.seekReadPointer(read_pos);
-    if (num_entries < 30) {
+    if (num_entries < 100) {
       read_pos = FSBuffer.readPos();
       long pos = FSBuffer.writePos();
-      pos -= (100 - num_entries) * 10;
+      pos -= 1000;
       if (pos < 0) {
         if (FSBuffer.endPos() > 0)
           pos += FSBuffer.length();
@@ -97,8 +105,9 @@ void sendFrames(bool full, int num) {
       FSBuffer.seekReadPointer(pos);
       while (FSBuffer.available()) {
         FSBuffer.initNextPacket();
-        df_buffer[0] = BayEOS_TimestampFrame;
         timestamp=FSBuffer.packetMillis();
+        if(timestamp>ram_ts) break;
+        df_buffer[0] = BayEOS_TimestampFrame;
         memcpy(df_buffer + 1,(uint8_t*) &timestamp,4); 
         FSBuffer.readPacket((uint8_t*)df_buffer + 5);
         base64_encode(tmp, df_buffer, FSBuffer.packetLength() + 5);

@@ -18,6 +18,7 @@ SoftwareSerial mySerial(MHZ19_RX_PIN, MHZ19_TX_PIN);                   // create
 
 CRGB led_data[LED_NUM];               // LED strip data
 
+#define FRAME_SIZE 10 /*Frame size of BayEOS-Frame in buffer */
 
 //Deklaration von notwendigen Funktionen
 void sendCO2();
@@ -71,16 +72,17 @@ void handleSensor(void)
     client.addChannelValue(device.co2_current);
     client.writeToBuffer();
     //Send current frame via Websocket to connected devices
-    //Try to send to BayEOS-Gateway
-    if (cfg.mode && strlen(cfg.bayeos_gateway) && strlen(cfg.bayeos_name)) {
-      client.sendMultiFromBuffer(1000);
-    }
 
     if(device.time_is_set){
       client.setBuffer(FSBuffer);
       client.writeToBuffer();
       client.setBuffer(myBuffer);
     }
-    sendFrames(); 
+    sendFrames();
+    //Try to send to BayEOS-Gateway
+    if (cfg.mode && strlen(cfg.bayeos_gateway) && strlen(cfg.bayeos_name)) {
+      client.sendMultiFromBuffer(1000);
+    }
+ 
   }
 }

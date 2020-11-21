@@ -10,6 +10,9 @@ var esp_time_update = Date.now(); //JS-Time
 var limit_low=1000;
 var limit_high=1400;
 var socket_id=-1;
+var sampling_int=10;
+var co2_array_len=10;
+var frame_size=10;
 
 var connection = new WebSocket('ws://' + location.hostname + ':81/',
 		[ 'arduino' ]);
@@ -64,6 +67,10 @@ connection.onmessage = function(e) {
 		limit_low=msg.low
 		$('#high').val(msg.high)
 		limit_high=msg.high
+		sampling_int=msg.sampling_int;
+		co2_array_len=msg.co2_array_len;
+		frame_size=msg.frame_size;
+		$('#buffer_tag').html(Math.round(3600*24/sampling_int/co2_array_len))
 		$('#blink').val(msg.blink)
 		$('#ampel_start').val(msg.ampel_start)
 		$('#ampel_end').val(msg.ampel_end)
@@ -77,13 +84,13 @@ connection.onmessage = function(e) {
 		for(var f in msg.frames){
 			parseFrame(msg.frames[f])
 		}
-		$('#buffer_max').html(msg.length/10)
+		$('#buffer_max').html(msg.length/frame_size/2)
 		var l=msg.write-msg.read
 		if(l<0) l+=msg.length
-		$('#buffer_neu').html(l/10)
+		$('#buffer_neu').html(l/frame_size)
 		l=msg.write-msg.end
 		if(l<0) l+=msg.length
-		$('#buffer_total').html(l/10)
+		$('#buffer_total').html(l/frame_size)
 
 		break;
 	case "data":
@@ -111,8 +118,8 @@ function download(){
 	var fileFormat=parseInt($('#dl_format option:selected').val())
 	var dlSize= parseInt($("input[name='dl_size']:checked").val())
 	if(dlSize>0){
-		dlSize=10*Math.round(3600*parseInt($('#dl_size_s option:selected').val())*
-		parseInt($('#dl_size_u option:selected').val())/100)
+		dlSize=frame_size*Math.round(3600*parseInt($('#dl_size_s option:selected').val())*
+		parseInt($('#dl_size_u option:selected').val())/sampling_int/co2_array_len)
 		if(isNaN(dlSize) || dlSize<=0){
 			alert('Invalid download size:' +dlSize)
 			return;
