@@ -71,10 +71,16 @@ void handleSensor(void)
     client.addChannelValue(device.co2_current);
     client.writeToBuffer();
     //Send current frame via Websocket to connected devices
-    sendFrames(); 
     //Try to send to BayEOS-Gateway
     if (cfg.mode && strlen(cfg.bayeos_gateway) && strlen(cfg.bayeos_name)) {
       client.sendMultiFromBuffer(1000);
     }
+
+    if(device.time_is_set){
+      client.setBuffer(FSBuffer);
+      client.writeToBuffer();
+      client.setBuffer(myBuffer);
+    }
+    sendFrames(); 
   }
 }

@@ -6,7 +6,7 @@ StaticJsonDocument<1024> doc;
    Method to send current config
    called at connect and on update
 */
-void sendConfig(int num=-1) {
+void sendConfig(int num = -1) {
   mes = F("{\"event\":\"conf\",\"ssid\":\"");
   mes += cfg.ssid;
   mes += F("\",\"name\":\"");
@@ -23,6 +23,8 @@ void sendConfig(int num=-1) {
   mes += cfg.high;
   mes += F(",\"blink\":");
   mes += cfg.blink;
+  mes += F(",\"socket_id\":");
+  mes += num;
   mes += F(",\"ampel_start\":");
   mes += cfg.ampel_start;
   mes += F(",\"ampel_end\":");
@@ -35,9 +37,11 @@ void sendConfig(int num=-1) {
   mes += cfg.bayeos_user;
   mes += F("\",\"bayeos_pw\":\"");
   mes += cfg.bayeos_pw;
+  mes += F("\",\"esp_version\":\"");
+  mes += ESP_VERSION;
   mes += "\"}";
-  if(num<0) webSocket.broadcastTXT(mes);
-  else webSocket.sendTXT(num,mes);
+  if (num < 0) webSocket.broadcastTXT(mes);
+  else webSocket.sendTXT(num, mes);
 }
 
 void sendCO2(void) {
@@ -54,19 +58,20 @@ void sendBlink(void) {
   webSocket.broadcastTXT(mes);
 }
 
-void sendFrames(bool full,int num) {
+void sendFrames(bool full, int num) {
   mes = F("{\"event\":\"frame\",\"frames\":[");
   int num_entries = 0;
   char tmp[150];
   char df_buffer[102];
-
+  unsigned long timestamp;
   unsigned long read_pos = myBuffer.readPos();
   if (full) {
     myBuffer.seekReadPointer(myBuffer.endPos());
     while (myBuffer.available()) {
       myBuffer.initNextPacket();
       df_buffer[0] = BayEOS_DelayedFrame;
-      *(unsigned long*)(df_buffer + 1) = millis() - myBuffer.packetMillis();
+      timestamp=millis() - myBuffer.packetMillis();
+      memcpy(df_buffer + 1,(uint8_t*) &timestamp,4); 
       myBuffer.readPacket((uint8_t*)df_buffer + 5);
       base64_encode(tmp, df_buffer, myBuffer.packetLength() + 5);
       tmp[base64_enc_len(myBuffer.packetLength() + 5)] = 0;
@@ -79,6 +84,35 @@ void sendFrames(bool full,int num) {
       yield();
     }
     myBuffer.seekReadPointer(read_pos);
+    if (num_entries < 30) {
+      read_pos = FSBuffer.readPos();
+      long pos = FSBuffer.writePos();
+      pos -= (100 - num_entries) * 10;
+      if (pos < 0) {
+        if (FSBuffer.endPos() > 0)
+          pos += FSBuffer.length();
+        else
+          pos = FSBuffer.endPos();
+      }
+      FSBuffer.seekReadPointer(pos);
+      while (FSBuffer.available()) {
+        FSBuffer.initNextPacket();
+        df_buffer[0] = BayEOS_TimestampFrame;
+        timestamp=FSBuffer.packetMillis();
+        memcpy(df_buffer + 1,(uint8_t*) &timestamp,4); 
+        FSBuffer.readPacket((uint8_t*)df_buffer + 5);
+        base64_encode(tmp, df_buffer, FSBuffer.packetLength() + 5);
+        tmp[base64_enc_len(FSBuffer.packetLength() + 5)] = 0;
+        if (num_entries) mes += ",";
+        mes += "\"";
+        mes += tmp;
+        mes += "\"";
+        num_entries++;
+        FSBuffer.next();
+        yield();
+      }     
+      FSBuffer.seekReadPointer(read_pos);
+    }
   } else {
     base64_encode(tmp, (char*) client.getPayload(), client.getPacketLength());
     tmp[base64_enc_len(client.getPacketLength())] = 0;
@@ -86,35 +120,43 @@ void sendFrames(bool full,int num) {
     mes += tmp;
     mes += "\"";
   }
-  mes += "]}";
-  if(full) webSocket.sendTXT(num,mes);
+  mes += "]";
+  mes += F(",\"write\":");
+  mes += FSBuffer.writePos();
+  mes += F(",\"read\":");
+  mes += FSBuffer.readPos();
+  mes += F(",\"end\":");
+  mes += FSBuffer.endPos();
+  mes += F(",\"length\":");
+  mes += FSBuffer.length();
+  mes += "}";
+  if (full) webSocket.sendTXT(num, mes);
   else webSocket.broadcastTXT(mes);
 }
 
 
 
 
+void sendMessage(char* str, bool error = false, int num = -1) {
+  mes = F("{\"event\":\"");
+  if (error) mes += F("error");
+  else mes += F("msg");
+  mes += F("\",\"text\":\"");
+  mes += str;
+  mes += "\"}";
+  if (num >= 0) webSocket.sendTXT(num, mes);
+  else webSocket.broadcastTXT(mes);
+}
 
-/*
-  main method for sending status updates to the clients
-*/
-void sendEvent(void) {
-  if (device.send_error) {
-    mes = F("{\"event\":\"error\",\"text\":\"");
-    mes += device.error;
-    mes += "\"}";
-    webSocket.broadcastTXT(mes);
-    device.send_error = false;
-    return;
-  }
-  if (device.send_msg) {
-    mes = F("{\"event\":\"msg\",\"text\":\"");
-    mes += device.msg;
-    mes += "\"}";
-    webSocket.broadcastTXT(mes);
-    device.send_msg = false;
-    return;
-  }
+void sendMessage(String &s, bool error = false, int num = -1) {
+  mes = F("{\"event\":\"");
+  if (error) mes += F("error");
+  else mes += F("msg");
+  mes += F("\",\"text\":\"");
+  mes += s;
+  mes += "\"}";
+  if (num >= 0) webSocket.sendTXT(num, mes);
+  else webSocket.broadcastTXT(mes);
 }
 
 
@@ -140,7 +182,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
       if (json_error) {
         mes = F("deserializeJson() failed: ");
         mes += json_error.c_str();
-        error(mes);
+        sendMessage(mes, true, num);
         return;
       }
       command = doc["command"];
@@ -148,7 +190,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
 
       if (strcmp(command, "setConf") == 0) {
         if (strcmp(doc["admin_pw"], ADMIN_PASSWORD) != 0) {
-          error(String(F("Admin Passwort ist falsch")));
+          sendMessage("Admin Passwort ist falsch", true, num);
           return;
         }
 
@@ -156,12 +198,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         strncpy(cfg.name, doc["name"], 19);
         cfg.name[19] = 0;
         if (strlen(doc["name"]) > 19) {
-          error(String(F("Name to long! Truncated")));
+          sendMessage("Name to long! Truncated", true, num);
         }
         strncpy(cfg.ssid, doc["ssid"], 19);
         cfg.ssid[19] = 0;
         if (strlen(doc["ssid"]) > 19) {
-          error(String(F("SSID to long! Truncated")));
+          sendMessage("SSID to long! Truncated", true, num);
         }
         strncpy(cfg.password, doc["password"], 19);
         cfg.password[19] = 0;
@@ -181,9 +223,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         strncpy(cfg.bayeos_pw, doc["bayeos_pw"], 49);
         cfg.bayeos_pw[49] = 0;
         saveConfig(); //save to EEPROM - defined in config.h
-        device.lastOnOff=millis()-60000; //Will check for updated on/off-time
+        device.lastOnOff = millis() - 60000; //Will check for updated on/off-time
         client.setConfig(cfg.bayeos_name, cfg.bayeos_gateway, "80", "gateway/frame/saveFlat", cfg.bayeos_user, cfg.bayeos_pw);
-        message(String(F("new config saved to EEPROM")));
+        sendMessage("new config saved to EEPROM", false, num);
+        if (doc["zerocal"]) {
+          myMHZ19.calibrateZero(20);
+          sendMessage("Runing zero calibration", true);
+        }
         myMHZ19.autoCalibration(cfg.autocalibration);
         sendConfig(); //send the current config to client
         return;
@@ -196,12 +242,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
       if (strcmp(command, "getAll") == 0) {
         unsigned long time = doc["time"];
         myRTC.adjust(time);
-        device.time_is_set=true;
+        device.time_is_set = true;
         sendConfig(num);
         delay(2);
         sendCO2();
         delay(2);
-        sendFrames(true,num);
+        sendFrames(true, num);
         return;
       }
 

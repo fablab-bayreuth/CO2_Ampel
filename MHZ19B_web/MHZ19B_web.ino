@@ -24,6 +24,7 @@
 
 
 */
+#define ESP_VERSION "0.0.4"
 #define ADMIN_PASSWORD "fab4admins"
 #define DEFAULT_SSID "CO2-Ampel"
 #define LED_DATA_PIN      D3     // LED strip Din
@@ -50,6 +51,9 @@ WebSocketsServer webSocket(81);    // create a websocket server on port 81
 uint8_t buffer[BUFFER_SIZE];
 BayEOSBufferRAM myBuffer(buffer, BUFFER_SIZE);
 RTC_Millis myRTC;
+#include <BayEOSBufferSPIFFS.h>
+#define SPIFFSBUFFER_SIZE 500000
+BayEOSBufferSPIFFS2 FSBuffer(SPIFFSBUFFER_SIZE);
 
 /* BayEOS-Client - um Daten an eine BayEOS-Gateway zu schicken*/
 #include <BayEOS-ESP8266.h>
@@ -77,6 +81,10 @@ void setup(void) {
   EEPROM.begin(sizeof(cfg));
   delay(1000);
   SPIFFS.begin();
+  FSBuffer.init();
+  FSBuffer.setRTC(myRTC);
+
+  
   loadConfig();
 
   if (cfg.mode == 1) {
@@ -124,6 +132,7 @@ void setup(void) {
   }
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
+  server.on("/download",handleDownload);
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
   server.begin();
@@ -146,7 +155,7 @@ void setup(void) {
 void loop(void) {
   webSocket.loop();                           // constantly check for websocket events
   server.handleClient();                      // handle web server requests
-  sendEvent();                                // Check for messages to send
+
   //Handle CO2-Sensor
   if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
     handleSensor();

@@ -28,10 +28,6 @@ struct MyCONFIG
 
 struct DeviceStatus
 {
-  bool send_error;
-  char error[50];
-  bool send_msg;
-  char msg[50];
   int co2[CO2_ARRAY_LEN];
   int co2_count;
   int co2_index;
@@ -49,14 +45,6 @@ struct DeviceStatus
 
 } device;
 
-void error(const String& s) {
-  s.toCharArray(device.error, 50);
-  device.send_error = true;
-}
-void message(const String& s) {
-  s.toCharArray(device.msg, 50);
-  device.send_msg = true;
-}
 
 void eraseConfig() {
   // Reset EEPROM bytes to '0' for the length of the data structure
@@ -65,7 +53,7 @@ void eraseConfig() {
   strcpy(cfg.ssid, DEFAULT_SSID);
   strcpy(cfg.password, "");
   cfg.mode = 0;
-  cfg.autocalibration=true;
+  cfg.autocalibration=false;
   cfg.low = 1000;
   cfg.high = 1400;
   cfg.blink = 1800;

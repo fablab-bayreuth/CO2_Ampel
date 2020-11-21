@@ -143,37 +143,71 @@ function set_col( c1, c2, c3 ) {
 
 <div class="tab2">
 		<div id="container"></div>
+		<table>
+		<tr><th colspan=2>Daten Download</th></tr>
+		<tr><td colspan=2>Datensätze gesamt: <span id="buffer_total">xx</span><br/>
+		Datensätze neu: <span id="buffer_neu">xx</span><br/>
+		Datensätze max: <span id="buffer_max">xx</span></td></tr>
+					<tr><td colspan=2>
+			<input type="radio" name="dl_size" id="dl_new" style="width:20px;" checked value="0"><label for="dl_new" id="dl_new_l"> Nur neue Daten seit letztem Download</label><br/>
+			<input type="radio" name="dl_size" id="dl_full" style="width:20px;" value="-1"><label for="dl_full" id="dl_full_l"> Alles herunterladen</label><br/>
+			<span id="dl_size_span" style="display:yes;">
+			<input type="radio" name="dl_size" id="dl_size" style="width:20px;" value="1">
+			<select id="dl_size_s" style="width:70px;">
+			<option>1</option><option>2</option><option>3</option>
+			<option>4</option><option>5</option><option>6</option>
+			<option>7</option><option>8</option><option>9</option>
+			<option>10</option><option>11</option><option>12</option>
+			<option>13</option><option>14</option><option>15</option>
+			<option>16</option><option>17</option><option>18</option>
+			<option>19</option><option>20</option><option>21</option>
+			<option>22</option><option>23</option><option>24</option>
+			</select>
+			<select id="dl_size_u" style="width:100px;"><option value="1">Stunden</option><option value="24">Tage</option><option value="168">Wochen</option><option value="720">Monate</option>
+			</select> <label for="dl_size" id="dl_size_l"> herunterladen</label><br/>
+			</span>
+			
+			</td></tr>
+			<tr>
+			<td>Dateiformat</td>
+			<td><select id="dl_format"><option value="0">BayEOS bdb-Datei</option>
+			<option value="1">csv-Datei</option></select>
+			<tr>
+				<td colspan=2><input id="dl" class="logger" type="button"
+					value="Herunterladen" onClick="download()"></td>
+			</tr>
+			</table>
 </div>
 
 <div class="tab3">	
 
  		<table>
 			<tr>
-				<td>Ampel-Name:</td>
+				<td>Ampel-Name</td>
 				<td><input class="config" id="name"></td>
 			</tr>
 			<tr>
-				<td>SSID:</td>
+				<td>SSID</td>
 				<td><input class="config" id="ssid"></td>
 			</tr>
 			<tr>
-				<td>Password:</td>
+				<td>Password</td>
 				<td><input class="config" id="password" type="password"></td>
 			</tr>
 			<tr>
-				<td>Grenze Gelb (ppm):</td>
+				<td>Grenze Gelb (ppm)</td>
 				<td><input class="config" id="low"></td>
 			</tr>
 			<tr>
-				<td>Grenze Rot (ppm):</td>
+				<td>Grenze Rot (ppm)</td>
 				<td><input class="config" id="high"></td>
 			</tr>
 			<tr>
-				<td>Grenze Rot Blinken (ppm):</td>
+				<td>Grenze Rot Blinken (ppm)</td>
 				<td><input class="config" id="blink"></td>
 			</tr>
 			<tr>
-				<td>Ampel aktiv ab :</td>
+				<td>Ampel aktiv ab</td>
 				<td><select class="config" id="ampel_start">
 <option value=0>Immer</option>
 <option value=300>05:00</option>
@@ -190,7 +224,7 @@ function set_col( c1, c2, c3 ) {
 </select></td>
 			</tr>
 			<tr>
-				<td>Ampel inaktiv ab:</td>
+				<td>Ampel inaktiv ab</td>
 				<td><select class="config" id="ampel_end">
 <option value=0>Nie</option>
 <option value=720>12:00</option>
@@ -215,27 +249,30 @@ function set_col( c1, c2, c3 ) {
 				<td><select class="config" id="autocalibration"><option value=0>Nein</option><option value=1>Ja</option></select></td>
 			</tr>
 			<tr>
+				<td colspan=2><input class="config" type="checkbox" id="zerocal" value=1  style="width: 20px;"><label for="zerocal">Hintergrund Kalibrierung jetzt durchführen</label>
+			</tr>
+			<tr>
 				<td>Mode</td>
 				<td><select class="config" id="mode"><option value=0>AP-Mode</option><option value=1>Client Mode</option></select></td>
 			</tr>
 			<tr class="bayeos">
-				<td>BayEOS-Name:</td>
+				<td>BayEOS-Name</td>
 				<td><input class="config" id="bayeos_name"></td>
 			</tr>
 			<tr class="bayeos">
-				<td>BayEOS-Gateway:</td>
+				<td>BayEOS-Gateway</td>
 				<td><input class="config" id="bayeos_gateway"></td>
 			</tr>
 			<tr class="bayeos">
-				<td>BayEOS-User:</td>
+				<td>BayEOS-User</td>
 				<td><input class="config" id="bayeos_user"></td>
 			</tr>
 			<tr class="bayeos">
-				<td>BayEOS-Password:</td>
+				<td>BayEOS-Password</td>
 				<td><input class="config" id="bayeos_pw" type="password"></td>
 			</tr>
 			<tr>
-				<td>Admin Password:</td>
+				<td>Admin Password</td>
 				<td><input class="config" id="admin_pw" type="password"></td>
 			</tr>
 			<tr>
@@ -252,9 +289,10 @@ $("#mode").change(function(){
 </script>
 <div class="tab4">
 <p>
-CO2-Ampel
-
-(c) Fablab Bayreuth
+CO2-Ampel (c) Fablab Bayreuth
+</p>
+<p>Frontend Version 0.0.4<br/>
+Backend Version <span id="esp_version">X.Y.Z</span>
 </p>
 </div>
 </figure>
