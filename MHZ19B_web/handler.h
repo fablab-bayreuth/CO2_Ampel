@@ -99,7 +99,7 @@ void handleDownload(void) {
   server.client().print(cfg.ssid);
   server.client().write('.');
   if (csv_format) server.client().print("csv");
-  else  server.client().print("dbd");
+  else  server.client().print("bdb");
   server.client().print(F("\r\n"));
   server.client().print(F("Content-Transfer-Encoding: binary\r\n"));
   server.client().print(F("Expires: 0\r\n"));
@@ -108,7 +108,7 @@ void handleDownload(void) {
   server.client().print(cfg.ssid);
   server.client().write('.');
   if (csv_format) server.client().print("csv");
-  else  server.client().print("dbd");
+  else  server.client().print("bdb");
   server.client().print(F("\r\n"));
   server.client().print(F("Content-Length: "));
   char tmp[12];
@@ -123,7 +123,7 @@ void handleDownload(void) {
   if (! csv_format) {
     const long sig = 0x50e0a10b; //File Signature 0BA1E050
     server.client().write((uint8_t*)&sig, 4);
-    server.client().write(strlen(cfg.ssid));
+    server.client().write((uint8_t) strlen(cfg.ssid));
     server.client().write((uint8_t*)cfg.ssid, strlen(cfg.ssid));
     uint8_t i_buffer[128];
     pos = FSBuffer.readPos();

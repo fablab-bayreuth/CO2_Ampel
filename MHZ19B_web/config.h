@@ -53,7 +53,7 @@ void eraseConfig() {
   strcpy(cfg.ssid, DEFAULT_SSID);
   strcpy(cfg.password, "");
   cfg.mode = 0;
-  cfg.autocalibration=false;
+  cfg.autocalibration=true;
   cfg.low = 1000;
   cfg.high = 1400;
   cfg.blink = 1800;

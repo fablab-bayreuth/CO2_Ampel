@@ -236,7 +236,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         client.setConfig(cfg.bayeos_name, cfg.bayeos_gateway, "80", "gateway/frame/saveFlat", cfg.bayeos_user, cfg.bayeos_pw);
         sendMessage("new config saved to EEPROM", false, num);
         if (doc["zerocal"]) {
-          myMHZ19.calibrateZero(20);
+          myMHZ19.calibrateZero();
           sendMessage("Runing zero calibration", true);
         }
         myMHZ19.autoCalibration(cfg.autocalibration);
@@ -252,6 +252,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         unsigned long time = doc["time"];
         myRTC.adjust(time);
         device.time_is_set = true;
+        pinMode(LED_BUILTIN,OUTPUT);
+        digitalWrite(LED_BUILTIN,LOW);
         sendConfig(num);
         delay(2);
         sendCO2();

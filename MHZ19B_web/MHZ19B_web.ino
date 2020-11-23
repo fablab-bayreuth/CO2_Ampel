@@ -24,9 +24,9 @@
 
 
 */
-#define ESP_VERSION "0.0.5"
+#define ESP_VERSION "0.0.6"
 #define ADMIN_PASSWORD "fab4admins"
-#define DEFAULT_SSID "CO2-Ampel-test"
+#define DEFAULT_SSID "CO2-Ampel"
 #define LED_DATA_PIN      D3     /* LED strip Din */
 #define SAMPLING_INT 10 /* Sampling Intervall */
 #define CO2_ARRAY_LEN 10 /* Anzahl Werte in Mittelung */
