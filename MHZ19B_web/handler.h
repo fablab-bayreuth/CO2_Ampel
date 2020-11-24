@@ -76,19 +76,16 @@ void handleDownload(void) {
   long dl_size = atoi(buffer);
 
   unsigned long read_pos = FSBuffer.readPos();
-  unsigned long pos = FSBuffer.endPos();
+  unsigned long pos = 0; //Full download
   if (dl_size >= 0) {
     if (dl_size > 0) {
-      if (dl_size > (FSBuffer.writePos() - FSBuffer.endPos())) {
-        pos = FSBuffer.endPos();
+      if (dl_size > FSBuffer.writePos()) {
+        pos = 0; //Full download
       } else {
-        pos = FSBuffer.writePos() - FSBuffer.endPos();
-        if (pos > FSBuffer.length()) {
-          pos += FSBuffer.length();
-        }
+        pos = FSBuffer.writePos() - dl_size; //calculated download size
       }
     } else
-      pos=FSBuffer.readPos();
+      pos=FSBuffer.readPos(); //only new
   }
   FSBuffer.seekReadPointer(pos);
 

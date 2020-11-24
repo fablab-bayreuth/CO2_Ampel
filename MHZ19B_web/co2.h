@@ -37,8 +37,10 @@ void handleLED(void){
     
 	  if(device.led_off || device.led_blink) co2_color = CRGB::Black;
 
-	  for (size_t i = 0; i < LED_NUM; i++)
-	    led_data[i] = co2_color;
+	  for (size_t i = 0; i < LED_NUM; i++){
+      if(! device.time_is_set && (i==1 || i==6)) led_data[i]=CRGB::Black;
+	    else led_data[i] = co2_color;
+	  }
 	  FastLED.show();
 
 }

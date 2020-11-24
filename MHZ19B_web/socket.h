@@ -252,8 +252,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         unsigned long time = doc["time"];
         myRTC.adjust(time);
         device.time_is_set = true;
-        pinMode(LED_BUILTIN,OUTPUT);
-        digitalWrite(LED_BUILTIN,LOW);
+        //pinMode(LED_BUILTIN,OUTPUT);
+        //digitalWrite(LED_BUILTIN,LOW);
         sendConfig(num);
         delay(2);
         sendCO2();
