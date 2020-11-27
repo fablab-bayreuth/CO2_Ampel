@@ -24,7 +24,7 @@
 
 
 */
-#define ESP_VERSION "0.0.7"
+#define ESP_VERSION "0.0.8"
 #define ADMIN_PASSWORD "fab4admins"
 #define DEFAULT_SSID "CO2-Ampel"
 #define LED_DATA_PIN      D3     /* LED strip Din */
@@ -47,12 +47,12 @@ WebSocketsServer webSocket(81);    // create a websocket server on port 81
   Rückblick auf -> 200*(SAMPLING_INT * CO2_ARRAY_LENGTH) -> z.B. 5,5h
 */
 #include <BayEOSBufferRAM.h>
-#define BUFFER_SIZE 4000
+#define BUFFER_SIZE 2000
 uint8_t buffer[BUFFER_SIZE];
 BayEOSBufferRAM myBuffer(buffer, BUFFER_SIZE);
 RTC_Millis myRTC;
 #include <BayEOSBufferSPIFFS.h>
-#define SPIFFSBUFFER_SIZE 500000
+#define SPIFFSBUFFER_SIZE 800000
 BayEOSBufferSPIFFS2 FSBuffer(SPIFFSBUFFER_SIZE);
 
 /* BayEOS-Client - um Daten an eine BayEOS-Gateway zu schicken*/
@@ -68,10 +68,7 @@ BayESP8266 client;
 
 
 void setup(void) {
-  // WS2812B LED strip init
   FastLED.addLeds< NEOPIXEL, LED_DATA_PIN >(led_data, LED_NUM);
-  FastLED.setBrightness(LED_BRIGHTNESS);
-
   for (size_t i = 0; i < LED_NUM; i++)
     led_data[i] = CRGB::Black;
   FastLED.show();
@@ -86,6 +83,9 @@ void setup(void) {
 
 
   loadConfig();
+  // WS2812B LED strip init
+  FastLED.setBrightness(cfg.brightness);
+
 
   if (cfg.mode == 1) {
     WiFi.begin(cfg.ssid, cfg.password);
@@ -97,12 +97,12 @@ void setup(void) {
     while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
       led_data[i % LED_NUM] = CRGB::Black;
       i++;
-      led_data[i] = CRGB::DarkBlue;
+      led_data[i % LED_NUM] = CRGB::DarkBlue;
       FastLED.show();
       delay(500);
       Serial.print(i);
       Serial.print('.');
-      if (i > 20) break;
+      if (i > 30) break;
     }
     Serial.println('\n');
     if (WiFi.status() == WL_CONNECTED) {
@@ -168,23 +168,30 @@ void setup(void) {
   FastLED.show();
 
 
-  // Run 8 measurements to avoid high values at startup
-  for (size_t i = 0; i < LED_NUM; i++) {
-    led_data[i] = CRGB::DarkBlue;
-    myMHZ19.getCO2();
-    FastLED.show();
-    delay(5000);
-  }
-
 }
+
+// Run 8 measurements to avoid high values at startup
+int warmup=8;
+unsigned long loop_count=0;
 
 void loop(void) {
   webSocket.loop();                           // constantly check for websocket events
   server.handleClient();                      // handle web server requests
-
+  loop_count++;
+  
   //Handle CO2-Sensor
-  if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
-    handleSensor();
+  if(warmup){
+    if((millis()-device.lastCO2)>5000){
+      warmup--;
+      led_data[warmup] = CRGB::DarkBlue;
+      myMHZ19.getCO2();
+      FastLED.show();
+      device.lastCO2=millis();
+    }
+  } else {
+    if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
+      handleSensor();
+    }
   }
   //Handle DNS-Request
   if (cfg.mode == 0)

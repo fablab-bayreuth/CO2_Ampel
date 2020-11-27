@@ -62,6 +62,8 @@ connection.onmessage = function(e) {
 		$('#ssid').val(msg.ssid)
 		$('#password').val(msg.password)
 		$('#mode').val(msg.mode)
+		if(msg.mode) $(".bayeos").show()
+		else $(".bayeos").hide()
 		$('#autocalibration').val(msg.autocalibration)
 		$('#low').val(msg.low)
 		limit_low=msg.low
@@ -74,16 +76,20 @@ connection.onmessage = function(e) {
 		$('#blink').val(msg.blink)
 		$('#ampel_start').val(msg.ampel_start)
 		$('#ampel_end').val(msg.ampel_end)
+		$('#brightness').val(msg.brightness)
 		$('#bayeos_name').val(msg.bayeos_name)
 		$('#bayeos_gateway').val(msg.bayeos_gateway)
 		$('#bayeos_user').val(msg.bayeos_user)
 		$('#bayeos_pw').val(msg.bayeos_pw)
+		$('#admin_pw1').val("")
+		$('#admin_pw2').val("")
 		$(".config").prop('disabled', false); //enable inputs
 		break;
 	case "frame":
 		for(var f in msg.frames){
 			parseFrame(msg.frames[f])
 		}
+		chart.redraw()
 		$('#buffer_max').html(msg.length/frame_size/2)
 		var l=msg.write-msg.read
 		if(l<0) l+=msg.length
@@ -94,6 +100,8 @@ connection.onmessage = function(e) {
 
 		break;
 	case "data":
+		shift = chart.series[0].data.length > 2000;
+		chart.series[0].addPoint([ Date.now(), msg.co2 ], true, shift)
 		$('#co2').html(msg.co2);
 		if(msg.co2<limit_low) set_col(0,0,1);
 		else if(msg.co2>limit_high) set_col(1,0,0);
@@ -157,10 +165,13 @@ function saveConf() {
 			blink: blink,
 			ampel_start : parseInt($('#ampel_start').val()),
 			ampel_end : parseInt($('#ampel_end').val()),
+			brightness : parseInt($('#brightness').val()),
 			bayeos_name : $('#bayeos_name').val(),
 			bayeos_gateway : $('#bayeos_gateway').val(),
 			bayeos_user : $('#bayeos_user').val(),
 			bayeos_pw : $('#bayeos_pw').val(),
+			admin_pw1 : $('#admin_pw1').val(),
+			admin_pw2 : $('#admin_pw2').val(),
 			admin_pw : $('#admin_pw').val(),
 			
 		};

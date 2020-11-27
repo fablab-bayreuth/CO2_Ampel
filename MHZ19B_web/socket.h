@@ -35,6 +35,8 @@ void sendConfig(int num = -1) {
   mes += cfg.ampel_start;
   mes += F(",\"ampel_end\":");
   mes += cfg.ampel_end;
+  mes += F(",\"brightness\":");
+  mes += cfg.brightness;
   mes += F(",\"bayeos_name\":\"");
   mes += cfg.bayeos_name;
   mes += F("\",\"bayeos_gateway\":\"");
@@ -51,6 +53,7 @@ void sendConfig(int num = -1) {
 }
 
 void sendCO2(void) {
+  if(! device.co2_current) return;
   mes = F("{\"event\":\"data\",\"co2\":");
   mes += device.co2_current;
   mes += "}";
@@ -64,7 +67,7 @@ void sendBlink(void) {
   webSocket.broadcastTXT(mes);
 }
 
-void sendFrames(bool full, int num) {
+void sendFrames(int num) {
   mes = F("{\"event\":\"frame\",\"frames\":[");
   int num_entries = 0;
   char tmp[150];
@@ -72,62 +75,49 @@ void sendFrames(bool full, int num) {
   unsigned long timestamp;
   unsigned long read_pos = myBuffer.readPos();
   unsigned long ram_ts;
-  if (full) {
-    myBuffer.seekReadPointer(myBuffer.endPos());
-    while (myBuffer.available()) {
-      myBuffer.initNextPacket();
-      df_buffer[0] = BayEOS_DelayedFrame;
-      timestamp=millis() - myBuffer.packetMillis();
-      if(! ram_ts) ram_ts=myRTC.sec()-timestamp/1000;
-      memcpy(df_buffer + 1,(uint8_t*) &timestamp,4); 
-      myBuffer.readPacket((uint8_t*)df_buffer + 5);
-      base64_encode(tmp, df_buffer, myBuffer.packetLength() + 5);
-      tmp[base64_enc_len(myBuffer.packetLength() + 5)] = 0;
+  myBuffer.seekReadPointer(myBuffer.endPos());
+  while (myBuffer.available()) {
+    myBuffer.initNextPacket();
+    df_buffer[0] = BayEOS_DelayedFrame;
+    timestamp = millis() - myBuffer.packetMillis();
+    if (! ram_ts) ram_ts = myRTC.sec() - timestamp / 1000;
+    memcpy(df_buffer + 1, (uint8_t*) &timestamp, 4);
+    myBuffer.readPacket((uint8_t*)df_buffer + 5);
+    base64_encode(tmp, df_buffer, myBuffer.packetLength() + 5);
+    tmp[base64_enc_len(myBuffer.packetLength() + 5)] = 0;
+    if (num_entries) mes += ",";
+    mes += "\"";
+    mes += tmp;
+    mes += "\"";
+    num_entries++;
+    myBuffer.next();
+    yield();
+  }
+  myBuffer.seekReadPointer(read_pos);
+  if (num_entries < 100) {
+    read_pos = FSBuffer.readPos();
+    long pos = FSBuffer.writePos();
+    pos -= 1000;
+    if (pos < 0) pos = 0;
+    FSBuffer.seekReadPointer(pos);
+    while (FSBuffer.available()) {
+      FSBuffer.initNextPacket();
+      timestamp = FSBuffer.packetMillis();
+      if (timestamp > ram_ts) break;
+      df_buffer[0] = BayEOS_TimestampFrame;
+      memcpy(df_buffer + 1, (uint8_t*) &timestamp, 4);
+      FSBuffer.readPacket((uint8_t*)df_buffer + 5);
+      base64_encode(tmp, df_buffer, FSBuffer.packetLength() + 5);
+      tmp[base64_enc_len(FSBuffer.packetLength() + 5)] = 0;
       if (num_entries) mes += ",";
       mes += "\"";
       mes += tmp;
       mes += "\"";
       num_entries++;
-      myBuffer.next();
+      FSBuffer.next();
       yield();
     }
-    myBuffer.seekReadPointer(read_pos);
-    if (num_entries < 100) {
-      read_pos = FSBuffer.readPos();
-      long pos = FSBuffer.writePos();
-      pos -= 1000;
-      if (pos < 0) {
-        if (FSBuffer.endPos() > 0)
-          pos += FSBuffer.length();
-        else
-          pos = FSBuffer.endPos();
-      }
-      FSBuffer.seekReadPointer(pos);
-      while (FSBuffer.available()) {
-        FSBuffer.initNextPacket();
-        timestamp=FSBuffer.packetMillis();
-        if(timestamp>ram_ts) break;
-        df_buffer[0] = BayEOS_TimestampFrame;
-        memcpy(df_buffer + 1,(uint8_t*) &timestamp,4); 
-        FSBuffer.readPacket((uint8_t*)df_buffer + 5);
-        base64_encode(tmp, df_buffer, FSBuffer.packetLength() + 5);
-        tmp[base64_enc_len(FSBuffer.packetLength() + 5)] = 0;
-        if (num_entries) mes += ",";
-        mes += "\"";
-        mes += tmp;
-        mes += "\"";
-        num_entries++;
-        FSBuffer.next();
-        yield();
-      }     
-      FSBuffer.seekReadPointer(read_pos);
-    }
-  } else {
-    base64_encode(tmp, (char*) client.getPayload(), client.getPacketLength());
-    tmp[base64_enc_len(client.getPacketLength())] = 0;
-    mes += "\"";
-    mes += tmp;
-    mes += "\"";
+    FSBuffer.seekReadPointer(read_pos);
   }
   mes += "]";
   mes += F(",\"write\":");
@@ -139,8 +129,7 @@ void sendFrames(bool full, int num) {
   mes += F(",\"length\":");
   mes += FSBuffer.length();
   mes += "}";
-  if (full) webSocket.sendTXT(num, mes);
-  else webSocket.broadcastTXT(mes);
+  webSocket.sendTXT(num, mes);
 }
 
 
@@ -198,12 +187,27 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
       Serial.println(command);
 
       if (strcmp(command, "setConf") == 0) {
-        if (strcmp(doc["admin_pw"], ADMIN_PASSWORD) != 0) {
+        //Got a message with new config values!
+        if (strcmp(doc["admin_pw"], cfg.admin_pw) != 0) {
           sendMessage("Admin Passwort ist falsch", true, num);
           return;
         }
-
-        //Got a message with new config values!
+        if (strcmp(doc["admin_pw1"], doc["admin_pw2"]) != 0) {
+          sendMessage("Die Admin Passwörter sind nicht gleich", true, num);
+          return;
+        }
+        if (strlen(doc["admin_pw1"]) > 0) {
+          if (strlen(doc["admin_pw1"]) < 6) {
+            sendMessage("Die Admin Passwort ist zu kurz", true, num);
+            return;
+          } else if (strlen(doc["admin_pw1"]) > 19) {
+            sendMessage("Die Admin Passwort ist zu lang", true, num);
+            return;
+          } else {
+            strncpy(cfg.admin_pw, doc["admin_pw1"], 19);
+            cfg.admin_pw[19] = 0;
+          }
+        }
         strncpy(cfg.name, doc["name"], 19);
         cfg.name[19] = 0;
         if (strlen(doc["name"]) > 19) {
@@ -217,6 +221,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         strncpy(cfg.password, doc["password"], 19);
         cfg.password[19] = 0;
         cfg.mode = doc["mode"];
+        cfg.brightness = doc["brightness"];
+        FastLED.setBrightness(cfg.brightness);
         cfg.autocalibration = doc["autocalibration"];
         cfg.low = doc["low"];
         cfg.high = doc["high"];
@@ -256,9 +262,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         //digitalWrite(LED_BUILTIN,LOW);
         sendConfig(num);
         delay(2);
-        sendCO2();
+        sendFrames(num);
         delay(2);
-        sendFrames(true, num);
+        sendCO2();
         return;
       }
 

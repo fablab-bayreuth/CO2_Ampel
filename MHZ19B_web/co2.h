@@ -9,7 +9,6 @@
 
 // LED strip
 #define LED_NUM           8     // Number of LEDs 
-#define LED_BRIGHTNESS    96    // define LED LED_BRIGHTNESS
 
 //=============================================================================
 
@@ -22,7 +21,7 @@ CRGB led_data[LED_NUM];               // LED strip data
 
 //Deklaration von notwendigen Funktionen
 void sendCO2();
-void sendFrames(bool full = false,int num=0);
+
 
 void handleLED(void){
 	  // LED traffic light display
@@ -73,14 +72,14 @@ void handleSensor(void)
     client.startDataFrame(BayEOS_Int16le);
     client.addChannelValue(device.co2_current);
     client.writeToBuffer();
-    //Send current frame via Websocket to connected devices
 
+    //Save data to SPIFFS-Buffer
     if(device.time_is_set){
       client.setBuffer(FSBuffer);
       client.writeToBuffer();
       client.setBuffer(myBuffer);
     }
-    sendFrames();
+    
     //Try to send to BayEOS-Gateway
     if (cfg.mode && strlen(cfg.bayeos_gateway) && strlen(cfg.bayeos_name)) {
       client.sendMultiFromBuffer(1000);

@@ -5,15 +5,17 @@ String mes; //global String!
 uint8_t sd_buffer[1024];
 char char_buffer[50]; //global Buffer for chars
 
-#define CONFIG_SIGNATURE 0xfab1ab27
+#define CONFIG_SIGNATURE 0xfab1ab28
 
 struct MyCONFIG
 {
   char name[20];
   char ssid[20];
   char password[20];
+  char admin_pw[20];
   bool autocalibration;
   uint8_t mode;/* 0 -> AP-Mode, 1 -> Client Mode */
+  uint8_t brightness;
   int low; //ppm for yellow
   int high; //ppm for red
   int blink; //ppm for red blink
@@ -52,13 +54,15 @@ void eraseConfig() {
   strcpy(cfg.name, DEFAULT_SSID);
   strcpy(cfg.ssid, DEFAULT_SSID);
   strcpy(cfg.password, "");
+  strcpy(cfg.admin_pw, ADMIN_PASSWORD);
   cfg.mode = 0;
+  cfg.brightness=80;
   cfg.autocalibration=true;
   cfg.low = 1000;
-  cfg.high = 1400;
-  cfg.blink = 1800;
-  cfg.ampel_start = 0;
-  cfg.ampel_end = 0;
+  cfg.high = 1500;
+  cfg.blink = 2000;
+  cfg.ampel_start = 360;
+  cfg.ampel_end = 1080;
   cfg.bayeos_name[0] = 0;
   cfg.bayeos_gateway[0] = 0;
   cfg.bayeos_user[0] = 0;

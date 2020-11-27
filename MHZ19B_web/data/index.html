@@ -245,11 +245,26 @@ function set_col( c1, c2, c3 ) {
 </select></td>
 			</tr>
 			<tr>
-				<td>Auto-Kalibrierung</td>
+				<td>Ampel Helligkeit</td>
+				<td><select class="config" id="brightness">
+<option value=10>10%</option>
+<option value=20>20%</option>
+<option value=30>30%</option>
+<option value=40>40%</option>
+<option value=50>50%</option>
+<option value=60>60%</option>
+<option value=70>70%</option>
+<option value=80>80%</option>
+<option value=90>90%</option>
+<option value=100>100%</option>
+</select></td>
+			</tr>
+			<tr>
+				<td>automatische Grundlinien-Korrektur (ABC)</td>
 				<td><select class="config" id="autocalibration"><option value=0>Nein</option><option value=1>Ja</option></select></td>
 			</tr>
 			<tr>
-				<td colspan=2><input class="config" type="checkbox" id="zerocal" value=1  style="width: 20px;"><label for="zerocal">Hintergrund Kalibrierung jetzt durchführen</label>
+				<td colspan=2><input class="config" type="checkbox" id="zerocal" value=1  style="width: 20px;"><label for="zerocal">Grundlinien-Korrektur jetzt durchführen</label>
 			</tr>
 			<tr>
 				<td>Mode</td>
@@ -272,6 +287,14 @@ function set_col( c1, c2, c3 ) {
 				<td><input class="config" id="bayeos_pw" type="password"></td>
 			</tr>
 			<tr>
+				<td>Neues Admin Password</td>
+				<td><input class="config" id="admin_pw1" type="password"></td>
+			</tr>
+			<tr>
+				<td>Neues Admin Password (Bestätigung)</td>
+				<td><input class="config" id="admin_pw2" type="password"></td>
+			</tr>
+			<tr>
 				<td>Admin Password</td>
 				<td><input class="config" id="admin_pw" type="password"></td>
 			</tr>
@@ -291,7 +314,7 @@ $("#mode").change(function(){
 <p>
 CO2-Ampel (c) Fablab Bayreuth
 </p>
-<p>Frontend Version 0.0.5<br/>
+<p>Frontend Version 0.0.8<br/>
 Backend Version <span id="esp_version">X.Y.Z</span>
 </p>
 </div>
