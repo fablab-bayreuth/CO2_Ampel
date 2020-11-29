@@ -24,7 +24,7 @@
 
 
 */
-#define ESP_VERSION "0.0.8"
+#define ESP_VERSION "0.1.0"
 #define ADMIN_PASSWORD "fab4admins"
 #define DEFAULT_SSID "CO2-Ampel"
 #define LED_DATA_PIN      D3     /* LED strip Din */

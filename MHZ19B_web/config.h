@@ -5,7 +5,7 @@ String mes; //global String!
 uint8_t sd_buffer[1024];
 char char_buffer[50]; //global Buffer for chars
 
-#define CONFIG_SIGNATURE 0xfab1ab28
+#define CONFIG_SIGNATURE 0xfab1ab29
 
 struct MyCONFIG
 {
@@ -21,6 +21,7 @@ struct MyCONFIG
   int blink; //ppm for red blink
   int ampel_start; //minutes
   int ampel_end; //minutes
+  uint8_t ampel_mode; // 0 -> full stripe , 1 -> full stripe continuous, 2 -> ampel
   char bayeos_name[50];
   char bayeos_gateway[50];
   char bayeos_user[50];
@@ -34,6 +35,7 @@ struct DeviceStatus
   int co2_count;
   int co2_index;
   int co2_current;
+  int co2_single;
   int co2_sum;
   unsigned long lastCO2;
   unsigned long lastData;
@@ -63,6 +65,7 @@ void eraseConfig() {
   cfg.blink = 2000;
   cfg.ampel_start = 360;
   cfg.ampel_end = 1080;
+  cfg.ampel_mode = 0;
   cfg.bayeos_name[0] = 0;
   cfg.bayeos_gateway[0] = 0;
   cfg.bayeos_user[0] = 0;

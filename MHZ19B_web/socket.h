@@ -15,6 +15,8 @@ void sendConfig(int num = -1) {
   mes += cfg.password;
   mes += F("\",\"mode\":");
   mes += cfg.mode;
+  mes += F(",\"ampel_mode\":");
+  mes += cfg.ampel_mode;
   mes += F(",\"autocalibration\":");
   mes += cfg.autocalibration;
   mes += F(",\"low\":");
@@ -56,6 +58,8 @@ void sendCO2(void) {
   if(! device.co2_current) return;
   mes = F("{\"event\":\"data\",\"co2\":");
   mes += device.co2_current;
+  mes += F(",\"co2_single\":");
+  mes += device.co2_single;
   mes += "}";
   webSocket.broadcastTXT(mes);
 }
@@ -131,6 +135,7 @@ void sendFrames(int num) {
   mes += "}";
   webSocket.sendTXT(num, mes);
 }
+
 
 
 
@@ -221,6 +226,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         strncpy(cfg.password, doc["password"], 19);
         cfg.password[19] = 0;
         cfg.mode = doc["mode"];
+        cfg.ampel_mode = doc["ampel_mode"];
         cfg.brightness = doc["brightness"];
         FastLED.setBrightness(cfg.brightness);
         cfg.autocalibration = doc["autocalibration"];

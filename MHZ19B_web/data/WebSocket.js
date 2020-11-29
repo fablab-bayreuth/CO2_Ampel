@@ -61,6 +61,7 @@ connection.onmessage = function(e) {
 		$('#name').val(msg.name)
 		$('#ssid').val(msg.ssid)
 		$('#password').val(msg.password)
+		$('#ampel_mode').val(msg.ampel_mode)
 		$('#mode').val(msg.mode)
 		if(msg.mode) $(".bayeos").show()
 		else $(".bayeos").hide()
@@ -165,6 +166,7 @@ function saveConf() {
 			blink: blink,
 			ampel_start : parseInt($('#ampel_start').val()),
 			ampel_end : parseInt($('#ampel_end').val()),
+			ampel_mode : parseInt($('#ampel_mode').val()),
 			brightness : parseInt($('#brightness').val()),
 			bayeos_name : $('#bayeos_name').val(),
 			bayeos_gateway : $('#bayeos_gateway').val(),

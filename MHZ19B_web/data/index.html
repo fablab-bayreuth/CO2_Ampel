@@ -207,6 +207,14 @@ function set_col( c1, c2, c3 ) {
 				<td><input class="config" id="blink"></td>
 			</tr>
 			<tr>
+				<td>Ampel Anzeige</td>
+				<td><select class="config" id="ampel_mode">
+				<option value=0>Voll Grenzwert</option>
+				<option value=1>Voll kontinuierlich</option>
+				<option value=2>Ampel Aufsatz</option>
+				</select></td>
+			</tr>
+			<tr>
 				<td>Ampel aktiv ab</td>
 				<td><select class="config" id="ampel_start">
 <option value=0>Immer</option>
@@ -314,7 +322,7 @@ $("#mode").change(function(){
 <p>
 CO2-Ampel (c) Fablab Bayreuth
 </p>
-<p>Frontend Version 0.0.8<br/>
+<p>Frontend Version 0.1.0<br/>
 Backend Version <span id="esp_version">X.Y.Z</span>
 </p>
 </div>
