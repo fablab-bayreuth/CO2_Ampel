@@ -71,6 +71,20 @@ void sendBlink(void) {
   webSocket.broadcastTXT(mes);
 }
 
+void sendBuffer(int num){
+  mes = F("{\"event\":\"buffer\",\"write\":");
+  mes += FSBuffer.writePos();
+  mes += F(",\"read\":");
+  mes += FSBuffer.readPos();
+  mes += F(",\"end\":");
+  mes += FSBuffer.endPos();
+  mes += F(",\"length\":");
+  mes += FSBuffer.length();
+  mes += "}"; 
+  if(num<0) webSocket.broadcastTXT(mes);
+  else webSocket.sendTXT(num, mes);
+}
+
 void sendFrames(int num) {
   mes = F("{\"event\":\"frame\",\"frames\":[");
   int num_entries = 0;
@@ -123,16 +137,7 @@ void sendFrames(int num) {
     }
     FSBuffer.seekReadPointer(read_pos);
   }
-  mes += "]";
-  mes += F(",\"write\":");
-  mes += FSBuffer.writePos();
-  mes += F(",\"read\":");
-  mes += FSBuffer.readPos();
-  mes += F(",\"end\":");
-  mes += FSBuffer.endPos();
-  mes += F(",\"length\":");
-  mes += FSBuffer.length();
-  mes += "}";
+  mes += "]}";
   webSocket.sendTXT(num, mes);
 }
 
@@ -271,6 +276,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         sendFrames(num);
         delay(2);
         sendCO2();
+        delay(2);
+        sendBuffer(num);
         return;
       }
 

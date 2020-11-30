@@ -91,6 +91,8 @@ connection.onmessage = function(e) {
 			parseFrame(msg.frames[f])
 		}
 		chart.redraw()
+		break;
+	case "buffer":
 		$('#buffer_max').html(msg.length/frame_size/2)
 		var l=msg.write-msg.read
 		if(l<0) l+=msg.length
@@ -98,12 +100,19 @@ connection.onmessage = function(e) {
 		l=msg.write-msg.end
 		if(l<0) l+=msg.length
 		$('#buffer_total').html(l/frame_size)
-
 		break;
 	case "data":
 		shift = chart.series[0].data.length > 2000;
 		chart.series[0].addPoint([ Date.now(), msg.co2 ], true, shift)
+		var t;
+		var diff=msg.co2-msg.co2_single;
+		if(diff< -20) t="⇑";
+		else if(diff<-10) t="⇗";
+		else if(diff<10) t="⇒";
+		else if(diff<20) t="⇘";
+		else t="⇓";
 		$('#co2').html(msg.co2);
+		$('#trend').html(t);
 		if(msg.co2<limit_low) set_col(0,0,1);
 		else if(msg.co2>limit_high) set_col(1,0,0);
 		else set_col(0,1,0);

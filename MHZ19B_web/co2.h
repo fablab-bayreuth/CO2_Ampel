@@ -21,6 +21,7 @@ CRGB led_data[LED_NUM];               // LED strip data
 
 //Deklaration von notwendigen Funktionen
 void sendCO2();
+void sendBuffer(int num=-1);
 
 
 void handleLED(void) {
@@ -33,7 +34,7 @@ void handleLED(void) {
   // LED traffic light display
   for (size_t i = 0; i < LED_NUM; i++) {
     if (device.co2_current < (cfg.low + (cont_i * i - cont_range / 2)) ) led_data[i] = CRGB::Green;
-    else if (device.co2_current > (cfg.high + (cont_range / 2 - cont_i * i))) led_data[i] = CRGB::Red;
+    else if (device.co2_current > (cfg.high + (cont_i * i - cont_range / 2))) led_data[i] = CRGB::Red;
     else led_data[i] = CRGB::DarkOrange;
     if (! device.time_is_set && (i == 1 || i == 6)) led_data[i] = CRGB::Black;
     if (cfg.ampel_mode == 2) {
@@ -85,6 +86,7 @@ void handleSensor(void)
       client.setBuffer(FSBuffer);
       client.writeToBuffer();
       client.setBuffer(myBuffer);
+      sendBuffer();
     }
 
     //Try to send to BayEOS-Gateway
