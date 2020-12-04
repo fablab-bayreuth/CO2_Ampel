@@ -3,8 +3,8 @@
 #include <SoftwareSerial.h>              // Remove if using HardwareSerial or Arduino package without SoftwareSerial support
 
 // Comlink to MHZ19 sensor
-#define MHZ19_RX_PIN     5               // Rx pin which the MHZ19 Tx pin is attached to
-#define MHZ19_TX_PIN     4               // Tx pin which the MHZ19 Rx pin is attached to
+#define MHZ19_RX_PIN     D1               // Rx pin which the MHZ19 Tx pin is attached to
+#define MHZ19_TX_PIN     D2               // Tx pin which the MHZ19 Rx pin is attached to
 #define MHZ19_BAUDRATE   9600            // Device to MH-Z19 Serial MHZ19_BAUDRATE (should not be changed)
 
 // LED strip

@@ -24,7 +24,7 @@
 
 
 */
-#define ESP_VERSION "0.1.1"
+#define ESP_VERSION "0.1.2"
 #define ADMIN_PASSWORD "fab4admins"
 #define DEFAULT_SSID "CO2-Ampel"
 #define LED_DATA_PIN      D3     /* LED strip Din */
@@ -109,6 +109,7 @@ void setup(void) {
       for (size_t i = 0; i < LED_NUM; i++)
         led_data[i] = CRGB::Green;
       FastLED.show();
+      WiFi.mode(WIFI_STA); // turn off ap
       Serial.println("Connection established!");
       Serial.print("IP address:\t");
       Serial.println(WiFi.localIP());         // Send the IP address of the ESP8266 to the computer
@@ -171,22 +172,22 @@ void setup(void) {
 }
 
 // Run 8 measurements to avoid high values at startup
-int warmup=8;
-unsigned long loop_count=0;
+int warmup = 8;
+unsigned long loop_count = 0;
 
 void loop(void) {
   webSocket.loop();                           // constantly check for websocket events
   server.handleClient();                      // handle web server requests
   loop_count++;
-  
+
   //Handle CO2-Sensor
-  if(warmup){
-    if((millis()-device.lastCO2)>5000){
+  if (warmup) {
+    if ((millis() - device.lastCO2) > 5000) {
       warmup--;
       led_data[warmup] = CRGB::DarkBlue;
       myMHZ19.getCO2();
       FastLED.show();
-      device.lastCO2=millis();
+      device.lastCO2 = millis();
     }
   } else {
     if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
