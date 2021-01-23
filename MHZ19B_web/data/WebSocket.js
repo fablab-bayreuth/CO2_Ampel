@@ -57,6 +57,7 @@ connection.onmessage = function(e) {
 		$( "#zerocal" ).prop( "checked", false );
 		if(msg.socket_id>=0) socket_id=msg.socket_id;
 		$('#ssid_h1').html(msg.name)
+		$('title').html(msg.ssid)
 		$('#esp_version').html(msg.esp_version)
 		$('#name').val(msg.name)
 		$('#ssid').val(msg.ssid)
