@@ -35,6 +35,13 @@ void sendNotFound(void) {
   server.send(404, "text/plain; charset=utf-8", "404: File Not Found");
 }
 
+void send401(void) {
+  server.send(401, "text/plain; charset=utf-8", "401: Authentification failed");
+}
+void send200(const char* s) {
+  server.send(200, "text/plain; charset=utf-8", s);
+}
+
 boolean isIp(String str) {
   for (size_t i = 0; i < str.length(); i++) {
     int c = str.charAt(i);
@@ -64,6 +71,64 @@ void handleNotFound() { // if the requested file or page doesn't exist, return a
   //Send file or Not Found
   if ( ! handleFileRead(server.uri()) ) 
     sendNotFound();
+
+}
+
+int getArgIndex(const String& s){
+	for (int i = 0; i<server.args(); i++){
+			if(server.argName(i)==s) return i;
+		}
+	return -1;
+}
+
+void handleCMD(void){
+	int i=getArgIndex("admin_pw");
+	if(i==-1 || server.arg(i)!=String(cfg.admin_pw)){
+		send401();
+		return;
+	}
+	i=getArgIndex("cmd");
+ // cmd?admin_pw=fab4admins&cmd=reset
+	if(server.arg(i)==String("reset")){
+		  eraseConfig();
+		  send200("Reset to default config!");
+		  return;
+	}
+ // cmd?admin_pw=fab4admins&cmd=client&SSID=MyWLAN&pw=GanzGeheim
+	if(server.arg(i)==String("client")){
+		int i_ssid=getArgIndex("SSID");
+		int i_pw=getArgIndex("pw");
+		if(i_ssid==-1 || i_pw==-1){
+			  send200("Please give SSID & pw");
+			  return;
+		}
+		server.arg(i_ssid).toCharArray(cfg.ssid,20);
+		server.arg(i_pw).toCharArray(cfg.password,20);
+		cfg.mode=1;
+		saveConfig();
+		send200("Set to client mode. Please restart");
+		return;
+	}
+ // cmd?admin_pw=fab4admins&cmd=bayeos
+ // agruments gateway, user, pw, name are optional
+	if(server.arg(i)==String("bayeos")){
+		int i_gateway=getArgIndex("gateway");
+		int i_user=getArgIndex("user");
+		int i_pw=getArgIndex("pw");
+		int i_name=getArgIndex("name");
+		if(i_gateway==-1) strcpy(cfg.bayeos_gateway,BAYEOS_GATEWAY);
+		else server.arg(i_gateway).toCharArray(cfg.bayeos_gateway,50);
+		if(i_user==-1) strcpy(cfg.bayeos_user,BAYEOS_USER);
+		else server.arg(i_user).toCharArray(cfg.bayeos_user,50);
+		if(i_pw==-1) strcpy(cfg.bayeos_pw,BAYEOS_PW);
+		else server.arg(i_pw).toCharArray(cfg.bayeos_pw,50);
+		if(i_name==-1) strcpy(cfg.bayeos_name,cfg.name);
+		else server.arg(i_name).toCharArray(cfg.bayeos_name,50);
+		server.arg(i_pw).toCharArray(cfg.password,20);
+		saveConfig();
+		send200("Set BayEOS-Config.");
+		return;
+	}
 
 }
 

@@ -24,12 +24,18 @@
 
 
 */
-#define ESP_VERSION "0.1.2"
+#define ESP_VERSION "0.1.3"
 #define ADMIN_PASSWORD "fab4admins"
 #define DEFAULT_SSID "CO2-Ampel"
+
+#define BAYEOS_GATEWAY "192.168.2.1"
+#define BAYEOS_USER "import"
+#define BAYEOS_PW "import"
+
 #define LED_DATA_PIN      D3     /* LED strip Din */
 #define SAMPLING_INT 10 /* Sampling Intervall */
 #define CO2_ARRAY_LEN 10 /* Anzahl Werte in Mittelung */
+#define SEND_RAW_DATA 1 /* Only effective in Client-Mode and BayEOS-Gateway */
 
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
@@ -154,6 +160,7 @@ void setup(void) {
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
   server.on("/download", handleDownload);
+  server.on("/cmd", handleCMD); //Command line interface via GET-Requests - see handler.h for more details.
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
   server.begin();

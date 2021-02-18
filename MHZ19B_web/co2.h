@@ -21,7 +21,7 @@ CRGB led_data[LED_NUM];               // LED strip data
 
 //Deklaration von notwendigen Funktionen
 void sendCO2();
-void sendBuffer(int num=-1);
+void sendBuffer(int num = -1);
 
 
 void handleLED(void) {
@@ -43,7 +43,7 @@ void handleLED(void) {
       else if (device.co2_current < cfg.low && i > 2) led_data[i] = CRGB::Black;
       else if ((device.co2_current >= cfg.low && device.co2_current <= cfg.high) && (i < 2 || i > 5)) led_data[i] = CRGB::Black;
     }
-    if(device.led_off || device.led_blink) led_data[i] = CRGB::Black;
+    if (device.led_off || device.led_blink) led_data[i] = CRGB::Black;
   }
   if (device.co2_current <= cfg.blink) device.led_blink = false;
 
@@ -59,7 +59,9 @@ void handleSensor(void)
     device.co2_sum -= device.co2[device.co2_index];
     device.co2_count--;
   }
-  device.co2[device.co2_index] = myMHZ19.getCO2();                   // CO2 concentration (in ppm);
+  int co2, temp;
+  co2 = myMHZ19.getCO2();                 // CO2 concentration (in ppm)
+  device.co2[device.co2_index] = co2;
   device.co2_single = device.co2[device.co2_index];
   Serial.print("co2: ");      Serial.print(device.co2[device.co2_index]);      Serial.print("  ");
   device.co2_sum += device.co2[device.co2_index];
@@ -69,7 +71,7 @@ void handleSensor(void)
   device.co2_current = device.co2_sum / device.co2_count;
   sendCO2();
 
-  uint16_t temp = myMHZ19.getTemperature();     // Temperature (in degrees Celsius)
+  temp = myMHZ19.getTemperature();     // Temperature (in degrees Celsius)
   Serial.print("temp: ");     Serial.print(temp);     Serial.println();
 
   handleLED();
@@ -79,20 +81,27 @@ void handleSensor(void)
     device.lastData = millis();
     client.startDataFrame(BayEOS_Int16le);
     client.addChannelValue(device.co2_current);
+#if SEND_RAW_DATA == 0
     client.writeToBuffer();
-
+#endif
     //Save data to SPIFFS-Buffer
     if (device.time_is_set) {
       client.setBuffer(FSBuffer);
       client.writeToBuffer();
       client.setBuffer(myBuffer);
-      sendBuffer();
-    }
-
-    //Try to send to BayEOS-Gateway
-    if (cfg.mode && strlen(cfg.bayeos_gateway) && strlen(cfg.bayeos_name)) {
-      client.sendMultiFromBuffer(1000);
+      sendBuffer(); //sends buffer information to client
     }
 
   }
+  //Try to send to BayEOS-Gateway
+  if (cfg.mode && cfg.bayeos_gateway[0] && cfg.bayeos_name[0]) {
+    client.sendMultiFromBuffer(1000);
+  }
+#if SEND_RAW_DATA
+  client.startDataFrame(BayEOS_Int16le);
+  client.addChannelValue(device.co2_current);
+  client.addChannelValue(co2);
+  client.addChannelValue(temp);
+  client.writeToBuffer();
+#endif
 }
