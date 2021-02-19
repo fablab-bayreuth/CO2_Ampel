@@ -9,12 +9,12 @@ char char_buffer[50]; //global Buffer for chars
 
 struct MyCONFIG
 {
-  char name[20];
-  char ssid[20];
-  char password[20];
-  char admin_pw[20];
+  char name[30];
+  char ssid[30];
+  char password[30];
+  char admin_pw[30];
   bool autocalibration;
-  uint8_t mode;/* 0 -> AP-Mode, 1 -> Client Mode */
+  uint8_t mode;/* 0 -> AP-Mode, 1 -> Client Mode, 2 -> Client + AP Mode */
   uint8_t brightness;
   int low; //ppm for yellow
   int high; //ppm for red
@@ -22,6 +22,14 @@ struct MyCONFIG
   int ampel_start; //minutes
   int ampel_end; //minutes
   uint8_t ampel_mode; // 0 -> full stripe , 1 -> full stripe continuous, 2 -> ampel
+  char client_ssid[30];
+  char client_pw[30];
+  bool static_ip;
+  uint32_t ip;
+  uint32_t subnet;
+  uint32_t gateway;
+  uint32_t dns;
+  bool bayeos;
   char bayeos_name[50];
   char bayeos_gateway[50];
   char bayeos_user[50];
@@ -66,6 +74,14 @@ void eraseConfig() {
   cfg.ampel_start = 360;
   cfg.ampel_end = 1080;
   cfg.ampel_mode = 0;
+  cfg.client_ssid[0]=0;
+  cfg.client_pw[0]=0;
+  cfg.static_ip=0;
+  cfg.ip=0x08080808;
+  cfg.gateway=0x01080808;
+  cfg.subnet=0x00ffffff;
+  cfg.dns=0x01080808;
+  cfg.bayeos=0;
   cfg.bayeos_name[0] = 0;
   cfg.bayeos_gateway[0] = 0;
   cfg.bayeos_user[0] = 0;
@@ -84,5 +100,5 @@ void saveConfig() {
 void loadConfig() {
   // Loads configuration from EEPROM into RAM
   EEPROM.get( 0, cfg );
-  if (cfg.sig != CONFIG_SIGNATURE || cfg.mode > 1) eraseConfig();
+  if (cfg.sig != CONFIG_SIGNATURE ) eraseConfig();
 }

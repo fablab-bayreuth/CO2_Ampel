@@ -24,9 +24,9 @@
 
 
 */
-#define ESP_VERSION "0.1.3"
-#define ADMIN_PASSWORD "fab4admins"
 #define DEFAULT_SSID "CO2-Ampel"
+#define ADMIN_PASSWORD "fab4admins"
+#define ESP_VERSION "0.1.4"
 
 #define BAYEOS_GATEWAY "192.168.2.1"
 #define BAYEOS_USER "import"
@@ -35,7 +35,7 @@
 #define LED_DATA_PIN      D3     /* LED strip Din */
 #define SAMPLING_INT 10 /* Sampling Intervall */
 #define CO2_ARRAY_LEN 10 /* Anzahl Werte in Mittelung */
-#define SEND_RAW_DATA 1 /* Only effective in Client-Mode and BayEOS-Gateway */
+#define SEND_RAW_DATA 0 /* Only effective in Client-Mode and BayEOS-Gateway */
 
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
@@ -92,11 +92,28 @@ void setup(void) {
   // WS2812B LED strip init
   FastLED.setBrightness(cfg.brightness);
 
+  WiFi.hostname(cfg.ssid);
 
-  if (cfg.mode == 1) {
-    WiFi.begin(cfg.ssid, cfg.password);
+  bool connected=0;
+  if (cfg.mode >= 1) {
+    if(cfg.static_ip){
+      IPAddress ip(cfg.ip);
+      IPAddress subnet(cfg.subnet);
+      IPAddress gateway(cfg.gateway);
+      IPAddress dns(cfg.dns);
+      Serial.println(ip.toString());
+      Serial.println(gateway.toString());
+      Serial.println(subnet.toString());
+      Serial.println(dns.toString());
+      
+      WiFi.config(ip, subnet, gateway, cfg.dns);
+    }
+    if(cfg.mode==1) WiFi.mode(WIFI_STA); 
+    else  WiFi.mode(WIFI_AP_STA);
+
+    WiFi.begin(cfg.client_ssid, cfg.client_pw);
     Serial.print("Connecting to ");
-    Serial.print(cfg.ssid);
+    Serial.print(cfg.client_ssid);
     Serial.println(" ...");
 
     int i = 0;
@@ -112,15 +129,15 @@ void setup(void) {
     }
     Serial.println('\n');
     if (WiFi.status() == WL_CONNECTED) {
+      connected=1;
       for (size_t i = 0; i < LED_NUM; i++)
         led_data[i] = CRGB::Green;
       FastLED.show();
-      WiFi.mode(WIFI_STA); // turn off ap
       Serial.println("Connection established!");
       Serial.print("IP address:\t");
       Serial.println(WiFi.localIP());         // Send the IP address of the ESP8266 to the computer
       client.setConfig(cfg.bayeos_name, cfg.bayeos_gateway, "80", "gateway/frame/saveFlat", cfg.bayeos_user, cfg.bayeos_pw);
-      if (strlen(cfg.bayeos_gateway) && strlen(cfg.bayeos_name)) {
+      if (cfg.bayeos && cfg.bayeos_gateway[0] && cfg.bayeos_name[0]) {
         client.startFrame(BayEOS_Message);
         client.addToPayload("Ampel IP: <a href=\"http://");
         client.addToPayload(WiFi.localIP().toString());
@@ -134,15 +151,14 @@ void setup(void) {
         led_data[i] = CRGB::Red;
       FastLED.show();
       Serial.println("Connection failed - Falling back to default AP-Mode");
-      strcpy(cfg.ssid, DEFAULT_SSID);
-      strcpy(cfg.password, "");
-      cfg.mode = 0;
+      WiFi.mode(WIFI_OFF);
     }
   }
 
-  if (cfg.mode == 0) {
+  if (cfg.mode == 0 || cfg.mode==2 || ! connected) {
     Serial.println("Starting own network...");
-    WiFi.mode(WIFI_AP);
+    if(cfg.mode == 0 || ! connected) WiFi.mode(WIFI_AP);
+    else WiFi.mode(WIFI_AP_STA);
     IPAddress Ip(192, 168, 4, 1);
     IPAddress NMask(255, 255, 255, 0);
     WiFi.softAPConfig(Ip, Ip, NMask);

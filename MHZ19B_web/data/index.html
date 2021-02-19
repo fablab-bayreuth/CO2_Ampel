@@ -278,7 +278,41 @@ function set_col( c1, c2, c3 ) {
 			</tr>
 			<tr>
 				<td>Mode</td>
-				<td><select class="config" id="mode"><option value=0>AP-Mode</option><option value=1>Client Mode</option></select></td>
+				<td><select class="config" id="mode"><option value=0>AP-Mode</option><option value=1>Client Mode</option><option value=2>Client Mode+AP-Mode</option></select></td>
+			</tr>
+			<tr class="client">
+				<td>WLAN SSID</td>
+				<td><input class="config" id="client_ssid"></td>
+			</tr>
+			<tr class="client">
+				<td>WLAN Passwort</td>
+				<td><input class="config" id="client_pw" type="password"></td>
+			</tr>
+			
+			<tr class="client">
+				<td>Manuelle IP Konfiguration</td>
+				<td><select class="config" id="static_ip"><option value=0>Nein</option><option value=1>Ja</option></select></td>
+			</tr>
+			<tr class="static">
+				<td>IP-Adresse</td>
+				<td><input class="config" id="ip"></td>
+			</tr>
+			<tr class="static">
+				<td>Gateway</td>
+				<td><input class="config" id="gateway"></td>
+			</tr>
+			<tr class="static">
+				<td>Subnet</td>
+				<td><input class="config" id="subnet"></td>
+			</tr>
+			<tr class="static">
+				<td>DNS</td>
+				<td><input class="config" id="dns"></td>
+			</tr>
+
+			<tr class="client">
+				<td>Daten an BayEOS-Gateway senden</td>
+				<td><select class="config" id="bayeos"><option value=0>Nein</option><option value=1>Ja</option></select></td>
 			</tr>
 			<tr class="bayeos">
 				<td>BayEOS-Name</td>
@@ -309,6 +343,9 @@ function set_col( c1, c2, c3 ) {
 				<td><input class="config" id="admin_pw" type="password"></td>
 			</tr>
 			<tr>
+				<td colspan=2><input class="config" type="checkbox" id="restart" value=1  style="width: 20px;"><label for="restart">Ampel nach dem Speichern neu starten</label>
+			</tr>
+			<tr>
 				<td colspan=2><input class="config" type="button"
 					value="Save" onClick="saveConf()"></td>
 			</tr>
@@ -316,17 +353,46 @@ function set_col( c1, c2, c3 ) {
 </div>
 <script type="text/javascript">
 $("#mode").change(function(){
-	if($("#mode").val()=="1") $(".bayeos").show()
-	else $(".bayeos").hide()
+	if($("#mode").val()=="0"){ 
+		$(".bayeos").hide()
+		$(".static").hide()
+		$(".client").hide()
+		
+	}
+	else {
+		$(".client").show()
+		if($("#bayeos").val()!="0") $(".bayeos").show()
+		if($("#static_ip").val()!="0") $(".static").show()		
+	}
 })
+
+$("#static_ip").change(function(){
+	if($("#static_ip").val()=="0") 
+	   $(".static").hide()		
+	else 
+	   $(".static").show()		
+	
+})
+
+$("#bayeos").change(function(){
+	if($("#bayeos").val()=="0") 
+	   $(".bayeos").hide()		
+	else 
+	   $(".bayeos").show()		
+	
+})
+
+
 </script>
 <div class="tab4">
 <p>
 CO2-Ampel (c) Fablab Bayreuth
 </p>
-<p>Frontend Version 0.1.3<br/>
+<p>Frontend Version 0.1.4<br/>
 Backend Version <span id="esp_version">X.Y.Z</span>
 </p>
+<p>MAC-Address: <span id="mac">MAC-Address</span><br/>
+Client-IP: <span id="current_ip"></span></p>
 </div>
 </figure>
 <table>
@@ -370,7 +436,9 @@ $(function(){
 })
 
 $(function(){ 
-	if($("#mode").val()=="0") $(".bayeos").hide() 
+	if($("#bayeos").val()=="0") $(".bayeos").hide() 
+	if($("#static_ip").val()=="0") $(".static").hide() 
+	if($("#mode").val()=="0") $(".client").hide() 	
 });
 </script>
 </body>

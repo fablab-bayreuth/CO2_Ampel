@@ -55,17 +55,25 @@ connection.onmessage = function(e) {
 		break
 	case "conf":
 		$( "#zerocal" ).prop( "checked", false );
+		$( "#restart" ).prop( "checked", false );
 		if(msg.socket_id>=0) socket_id=msg.socket_id;
 		$('#ssid_h1').html(msg.name)
 		$('title').html(msg.ssid)
 		$('#esp_version').html(msg.esp_version)
+		$('#mac').html(msg.mac)
+		$('#current_ip').html(msg.current_ip)
 		$('#name').val(msg.name)
 		$('#ssid').val(msg.ssid)
 		$('#password').val(msg.password)
 		$('#ampel_mode').val(msg.ampel_mode)
 		$('#mode').val(msg.mode)
-		if(msg.mode) $(".bayeos").show()
-		else $(".bayeos").hide()
+		$('#client_ssid').val(msg.client_ssid)
+		$('#client_pw').val(msg.client_pw)
+		$('#static_ip').val(msg.static_ip)
+		$('#ip').val(msg.ip)
+		$('#gateway').val(msg.gateway)
+		$('#subnet').val(msg.subnet)
+		$('#dns').val(msg.dns)
 		$('#autocalibration').val(msg.autocalibration)
 		$('#low').val(msg.low)
 		limit_low=msg.low
@@ -79,6 +87,7 @@ connection.onmessage = function(e) {
 		$('#ampel_start').val(msg.ampel_start)
 		$('#ampel_end').val(msg.ampel_end)
 		$('#brightness').val(msg.brightness)
+		$('#bayeos').val(msg.bayeos)
 		$('#bayeos_name').val(msg.bayeos_name)
 		$('#bayeos_gateway').val(msg.bayeos_gateway)
 		$('#bayeos_user').val(msg.bayeos_user)
@@ -86,6 +95,16 @@ connection.onmessage = function(e) {
 		$('#admin_pw1').val("")
 		$('#admin_pw2').val("")
 		$(".config").prop('disabled', false); //enable inputs
+		if($("#mode").val()=="0"){ 
+			$(".bayeos").hide()
+			$(".static").hide()
+			$(".client").hide()
+		} else {
+			$(".client").show()
+			if($("#bayeos").val()!="0") $(".bayeos").show()
+			if($("#static_ip").val()!="0") $(".static").show()		
+		}
+
 		break;
 	case "frame":
 		for(var f in msg.frames){
@@ -166,10 +185,18 @@ function saveConf() {
 	var msg = {
 			command : "setConf",
 			zerocal : (	$( "#zerocal" ).prop( "checked" )?1:0),
+			restart : (	$( "#restart" ).prop( "checked" )?1:0),
 			name : $('#name').val(),
 			ssid : $('#ssid').val(),
 			password : $('#password').val(),
 			mode : parseInt($('#mode').val()),
+			client_ssid : $('#client_ssid').val(),
+			client_pw : $('#client_pw').val(),
+			static_ip : parseInt($('#static_ip').val()),
+			ip : $('#ip').val(),
+			gateway : $('#gateway').val(),
+			subnet : $('#subnet').val(),
+			dns : $('#dns').val(),			
 			autocalibration : parseInt($('#autocalibration').val()),
 			low: low,
 			high: high,
@@ -178,6 +205,7 @@ function saveConf() {
 			ampel_end : parseInt($('#ampel_end').val()),
 			ampel_mode : parseInt($('#ampel_mode').val()),
 			brightness : parseInt($('#brightness').val()),
+			bayeos : parseInt($('#bayeos').val()),
 			bayeos_name : $('#bayeos_name').val(),
 			bayeos_gateway : $('#bayeos_gateway').val(),
 			bayeos_user : $('#bayeos_user').val(),

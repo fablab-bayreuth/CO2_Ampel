@@ -39,6 +39,26 @@ void sendConfig(int num = -1) {
   mes += cfg.ampel_end;
   mes += F(",\"brightness\":");
   mes += cfg.brightness;
+  mes += F(",\"client_ssid\":\"");
+  mes += cfg.client_ssid;
+  mes += F("\",\"client_pw\":\"");
+  mes += cfg.client_pw; 
+  mes += F("\",\"static_ip\":");
+  mes += cfg.static_ip;
+  mes += F(",\"ip\":\"");
+  IPAddress ip(cfg.ip);
+  mes += ip.toString();
+  mes += F("\",\"subnet\":\"");
+  ip=IPAddress(cfg.subnet);
+  mes += ip.toString();
+  mes += F("\",\"gateway\":\"");
+  ip=IPAddress(cfg.gateway);
+  mes += ip.toString();
+  mes += F("\",\"dns\":\"");
+  ip=IPAddress(cfg.dns);
+  mes += ip.toString();
+  mes += F("\",\"bayeos\":");
+  mes += cfg.bayeos;
   mes += F(",\"bayeos_name\":\"");
   mes += cfg.bayeos_name;
   mes += F("\",\"bayeos_gateway\":\"");
@@ -49,6 +69,10 @@ void sendConfig(int num = -1) {
   mes += cfg.bayeos_pw;
   mes += F("\",\"esp_version\":\"");
   mes += ESP_VERSION;
+  mes += F("\",\"mac\":\"");
+  mes += WiFi.macAddress();
+  mes += F("\",\"current_ip\":\"");
+  mes += WiFi.localIP().toString();
   mes += "\"}";
   if (num < 0) webSocket.broadcastTXT(mes);
   else webSocket.sendTXT(num, mes);
@@ -210,26 +234,36 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
           if (strlen(doc["admin_pw1"]) < 6) {
             sendMessage("Die Admin Passwort ist zu kurz", true, num);
             return;
-          } else if (strlen(doc["admin_pw1"]) > 19) {
+          } else if (strlen(doc["admin_pw1"]) > 29) {
             sendMessage("Die Admin Passwort ist zu lang", true, num);
             return;
           } else {
-            strncpy(cfg.admin_pw, doc["admin_pw1"], 19);
-            cfg.admin_pw[19] = 0;
+            strncpy(cfg.admin_pw, doc["admin_pw1"], 29);
+            cfg.admin_pw[29] = 0;
           }
         }
-        strncpy(cfg.name, doc["name"], 19);
-        cfg.name[19] = 0;
-        if (strlen(doc["name"]) > 19) {
+        strncpy(cfg.name, doc["name"], 29);
+        cfg.name[29] = 0;
+        if (strlen(doc["name"]) > 29) {
           sendMessage("Name to long! Truncated", true, num);
         }
-        strncpy(cfg.ssid, doc["ssid"], 19);
-        cfg.ssid[19] = 0;
-        if (strlen(doc["ssid"]) > 19) {
+        strncpy(cfg.ssid, doc["ssid"], 29);
+        cfg.ssid[29] = 0;
+        if (strlen(doc["ssid"]) > 29) {
           sendMessage("SSID to long! Truncated", true, num);
         }
-        strncpy(cfg.password, doc["password"], 19);
-        cfg.password[19] = 0;
+        strncpy(cfg.client_ssid, doc["client_ssid"], 29);
+        cfg.client_ssid[29] = 0;
+        if (strlen(doc["client_ssid"]) > 29) {
+          sendMessage("Client SSID to long! Truncated", true, num);
+        }
+        strncpy(cfg.client_pw, doc["client_pw"], 29);
+        cfg.client_pw[29] = 0;
+        if (strlen(doc["client_pw"]) > 29) {
+          sendMessage("Client PW to long! Truncated", true, num);
+        }
+        strncpy(cfg.password, doc["password"], 29);
+        cfg.password[29] = 0;
         cfg.mode = doc["mode"];
         cfg.ampel_mode = doc["ampel_mode"];
         cfg.brightness = doc["brightness"];
@@ -240,6 +274,22 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         cfg.blink = doc["blink"];
         cfg.ampel_start = doc["ampel_start"];
         cfg.ampel_end = doc["ampel_end"];
+        cfg.static_ip = doc["static_ip"];
+        char buffer[16];
+        strncpy(buffer,doc["ip"],16);
+        IPAddress ip;
+        ip.fromString(buffer);
+        cfg.ip=(uint32_t) ip;
+        strncpy(buffer,doc["gateway"],16);
+        ip.fromString(buffer);
+        cfg.gateway=(uint32_t) ip;
+        strncpy(buffer,doc["subnet"],16);
+        ip.fromString(buffer);
+        cfg.subnet=(uint32_t) ip;
+        strncpy(buffer,doc["dns"],16);
+        ip.fromString(buffer);
+        cfg.dns=(uint32_t) ip;
+        cfg.bayeos = doc["bayeos"];
         strncpy(cfg.bayeos_name, doc["bayeos_name"], 49);
         cfg.bayeos_name[49] = 0;
         strncpy(cfg.bayeos_gateway, doc["bayeos_gateway"], 49);
@@ -258,6 +308,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         }
         myMHZ19.autoCalibration(cfg.autocalibration);
         sendConfig(); //send the current config to client
+        if (doc["restart"]) {
+          sendMessage("Starte CO2-Ampel neu", true);
+          delay(3000);
+          ESP.reset();
+        }
+
+        
         return;
       }
       if (strcmp(command, "getConf") == 0) {

@@ -94,7 +94,7 @@ void handleSensor(void)
 
   }
   //Try to send to BayEOS-Gateway
-  if (cfg.mode && cfg.bayeos_gateway[0] && cfg.bayeos_name[0]) {
+  if (cfg.mode && cfg.bayeos && cfg.bayeos_gateway[0] && cfg.bayeos_name[0]) {
     client.sendMultiFromBuffer(1000);
   }
 #if SEND_RAW_DATA

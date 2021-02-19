@@ -89,11 +89,18 @@ void handleCMD(void){
 	}
 	i=getArgIndex("cmd");
  // cmd?admin_pw=fab4admins&cmd=reset
-	if(server.arg(i)==String("reset")){
-		  eraseConfig();
-		  send200("Reset to default config!");
-		  return;
-	}
+  if(server.arg(i)==String("reset")){
+      eraseConfig();
+      send200("Reset to default config!");
+      return;
+  }
+ // cmd?admin_pw=fab4admins&cmd=delete
+  if(server.arg(i)==String("delete")){
+      FSBuffer.reset();
+      myBuffer.reset();
+      send200("Deleting Data!");
+      return;
+  }
  // cmd?admin_pw=fab4admins&cmd=client&SSID=MyWLAN&pw=GanzGeheim
 	if(server.arg(i)==String("client")){
 		int i_ssid=getArgIndex("SSID");
@@ -102,9 +109,9 @@ void handleCMD(void){
 			  send200("Please give SSID & pw");
 			  return;
 		}
-		server.arg(i_ssid).toCharArray(cfg.ssid,20);
-		server.arg(i_pw).toCharArray(cfg.password,20);
-		cfg.mode=1;
+		server.arg(i_ssid).toCharArray(cfg.client_ssid,30);
+		server.arg(i_pw).toCharArray(cfg.client_pw,30);
+		cfg.mode=2;
 		saveConfig();
 		send200("Set to client mode. Please restart");
 		return;
@@ -116,6 +123,7 @@ void handleCMD(void){
 		int i_user=getArgIndex("user");
 		int i_pw=getArgIndex("pw");
 		int i_name=getArgIndex("name");
+    cfg.bayeos=1;
 		if(i_gateway==-1) strcpy(cfg.bayeos_gateway,BAYEOS_GATEWAY);
 		else server.arg(i_gateway).toCharArray(cfg.bayeos_gateway,50);
 		if(i_user==-1) strcpy(cfg.bayeos_user,BAYEOS_USER);
@@ -124,7 +132,6 @@ void handleCMD(void){
 		else server.arg(i_pw).toCharArray(cfg.bayeos_pw,50);
 		if(i_name==-1) strcpy(cfg.bayeos_name,cfg.name);
 		else server.arg(i_name).toCharArray(cfg.bayeos_name,50);
-		server.arg(i_pw).toCharArray(cfg.password,20);
 		saveConfig();
 		send200("Set BayEOS-Config.");
 		return;
