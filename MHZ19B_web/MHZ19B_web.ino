@@ -24,7 +24,7 @@
 
 
 */
-#define DEFAULT_SSID "CO2-Ampel_0146"
+#define DEFAULT_SSID "CO2-Ampel_XXXX"
 #define ADMIN_PASSWORD "fab4admins"
 #define ESP_VERSION "0.1.4"
 
