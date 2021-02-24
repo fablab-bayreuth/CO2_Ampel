@@ -43,6 +43,8 @@ void sendConfig(int num = -1) {
   mes += cfg.client_ssid;
   mes += F("\",\"client_pw\":\"");
   mes += cfg.client_pw; 
+  mes += F("\",\"hostname\":\"");
+  mes += cfg.hostname;
   mes += F("\",\"static_ip\":");
   mes += cfg.static_ip;
   mes += F(",\"ip\":\"");
@@ -261,6 +263,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload,
         cfg.client_pw[29] = 0;
         if (strlen(doc["client_pw"]) > 29) {
           sendMessage("Client PW to long! Truncated", true, num);
+        }
+        strncpy(cfg.hostname, doc["hostname"], 29);
+        cfg.hostname[29] = 0;
+        if (strlen(doc["hostname"]) > 29) {
+          sendMessage("Hostname to long! Truncated", true, num);
         }
         strncpy(cfg.password, doc["password"], 29);
         cfg.password[29] = 0;

@@ -69,6 +69,7 @@ connection.onmessage = function(e) {
 		$('#mode').val(msg.mode)
 		$('#client_ssid').val(msg.client_ssid)
 		$('#client_pw').val(msg.client_pw)
+		$('#hostname').val(msg.hostname)
 		$('#static_ip').val(msg.static_ip)
 		$('#ip').val(msg.ip)
 		$('#gateway').val(msg.gateway)
@@ -192,6 +193,7 @@ function saveConf() {
 			mode : parseInt($('#mode').val()),
 			client_ssid : $('#client_ssid').val(),
 			client_pw : $('#client_pw').val(),
+			hostname : $('#hostname').val(),
 			static_ip : parseInt($('#static_ip').val()),
 			ip : $('#ip').val(),
 			gateway : $('#gateway').val(),

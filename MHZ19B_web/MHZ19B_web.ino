@@ -26,7 +26,7 @@
 */
 #define DEFAULT_SSID "CO2-Ampel_XXXX"
 #define ADMIN_PASSWORD "fab4admins"
-#define ESP_VERSION "0.1.4"
+#define ESP_VERSION "0.1.5"
 
 #define BAYEOS_GATEWAY "192.168.2.1"
 #define BAYEOS_USER "import"
@@ -92,7 +92,7 @@ void setup(void) {
   // WS2812B LED strip init
   FastLED.setBrightness(cfg.brightness);
 
-  WiFi.hostname(cfg.ssid);
+  WiFi.hostname(cfg.hostname);
 
   bool connected=0;
   if (cfg.mode >= 1) {

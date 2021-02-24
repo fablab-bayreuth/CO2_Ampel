@@ -5,7 +5,7 @@ String mes; //global String!
 uint8_t sd_buffer[1024];
 char char_buffer[50]; //global Buffer for chars
 
-#define CONFIG_SIGNATURE 0xfab1ab29
+#define CONFIG_SIGNATURE 0xfab1ab30
 
 struct MyCONFIG
 {
@@ -24,6 +24,7 @@ struct MyCONFIG
   uint8_t ampel_mode; // 0 -> full stripe , 1 -> full stripe continuous, 2 -> ampel
   char client_ssid[30];
   char client_pw[30];
+  char hostname[30];
   bool static_ip;
   uint32_t ip;
   uint32_t subnet;
@@ -63,6 +64,7 @@ void eraseConfig() {
   cfg.sig = CONFIG_SIGNATURE;
   strcpy(cfg.name, DEFAULT_SSID);
   strcpy(cfg.ssid, DEFAULT_SSID);
+  strcpy(cfg.hostname, DEFAULT_SSID);
   strcpy(cfg.password, "");
   strcpy(cfg.admin_pw, ADMIN_PASSWORD);
   cfg.mode = 0;
