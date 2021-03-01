@@ -26,15 +26,15 @@
 */
 #define DEFAULT_SSID "CO2-Ampel_XXXX"
 #define ADMIN_PASSWORD "fab4admins"
-#define ESP_VERSION "0.1.5"
+#define ESP_VERSION "0.1.6"
 
 #define BAYEOS_GATEWAY "192.168.2.1"
 #define BAYEOS_USER "import"
 #define BAYEOS_PW "import"
 
 #define LED_DATA_PIN      D3     /* LED strip Din */
-#define SAMPLING_INT 10 /* Sampling Intervall */
-#define CO2_ARRAY_LEN 10 /* Anzahl Werte in Mittelung */
+#define SAMPLING_INT 10 /* Default Sampling Intervall */
+#define CO2_ARRAY_LEN 50 /* Anzahl Werte in Mittelung */
 #define SEND_RAW_DATA 0 /* Only effective in Client-Mode and BayEOS-Gateway */
 
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
@@ -213,7 +213,7 @@ void loop(void) {
       device.lastCO2 = millis();
     }
   } else {
-    if ((millis() - device.lastCO2) > (SAMPLING_INT * 1000)) {
+    if ((millis() - device.lastCO2) > (cfg.samplingint * 1000)) {
       handleSensor();
     }
   }

@@ -252,6 +252,14 @@ function set_col( c1, c2, c3 ) {
 <option value=1140>19:00</option>
 <option value=1170>19:30</option>
 <option value=1200>20:00</option>
+<option value=1170>19:30</option>
+<option value=1200>20:00</option>
+<option value=1230>20:30</option>
+<option value=1260>21:00</option>
+<option value=1290>21:30</option>
+<option value=1320>22:00</option>
+<option value=1350>22:30</option>
+<option value=1380>23:00</option>
 </select></td>
 			</tr>
 			<tr>
@@ -275,6 +283,18 @@ function set_col( c1, c2, c3 ) {
 			</tr>
 			<tr>
 				<td colspan=2><input class="config" type="checkbox" id="zerocal" value=1  style="width: 20px;"><label for="zerocal">Grundlinien-Korrektur jetzt durchführen</label>
+			</tr>
+			<tr>
+				<td>Messintervall (s)</td>
+				<td><input class="config" id="samplingint"></td>
+			</tr>
+			<tr>
+				<td>Logging Intervall (s)</td>
+				<td><input class="config" id="loggingint"></td>
+			</tr>
+			<tr>
+				<td>Anzahl Werte in Mittelung</td>
+				<td><input class="config" id="samplingavr"></td>
 			</tr>
 			<tr>
 				<td>Mode</td>
@@ -392,7 +412,7 @@ $("#bayeos").change(function(){
 <p>
 CO2-Ampel (c) Fablab Bayreuth
 </p>
-<p>Frontend Version 0.1.5<br/>
+<p>Frontend Version 0.1.6<br/>
 Backend Version <span id="esp_version">X.Y.Z</span>
 </p>
 <p>MAC-Address: <span id="mac">MAC-Address</span><br/>

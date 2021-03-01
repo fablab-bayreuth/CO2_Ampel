@@ -10,7 +10,7 @@ var esp_time_update = Date.now(); //JS-Time
 var limit_low=1000;
 var limit_high=1400;
 var socket_id=-1;
-var sampling_int=10;
+var logging_int=100;
 var co2_array_len=10;
 var frame_size=10;
 
@@ -67,6 +67,9 @@ connection.onmessage = function(e) {
 		$('#password').val(msg.password)
 		$('#ampel_mode').val(msg.ampel_mode)
 		$('#mode').val(msg.mode)
+		$('#loggingint').val(msg.loggingint)
+		$('#samplingint').val(msg.samplingint)
+		$('#samplingavr').val(msg.samplingavr)
 		$('#client_ssid').val(msg.client_ssid)
 		$('#client_pw').val(msg.client_pw)
 		$('#hostname').val(msg.hostname)
@@ -80,10 +83,10 @@ connection.onmessage = function(e) {
 		limit_low=msg.low
 		$('#high').val(msg.high)
 		limit_high=msg.high
-		sampling_int=msg.sampling_int;
+		logging_int=msg.loggingint;
 		co2_array_len=msg.co2_array_len;
 		frame_size=msg.frame_size;
-		$('#buffer_tag').html(Math.round(3600*24/sampling_int/co2_array_len))
+		$('#buffer_tag').html(Math.round(3600*24/logging_int))
 		$('#blink').val(msg.blink)
 		$('#ampel_start').val(msg.ampel_start)
 		$('#ampel_end').val(msg.ampel_end)
@@ -158,7 +161,7 @@ function download(){
 	var dlSize= parseInt($("input[name='dl_size']:checked").val())
 	if(dlSize>0){
 		dlSize=frame_size*Math.round(3600*parseInt($('#dl_size_s option:selected').val())*
-		parseInt($('#dl_size_u option:selected').val())/sampling_int/co2_array_len)
+		parseInt($('#dl_size_u option:selected').val())/logging_int)
 		if(isNaN(dlSize) || dlSize<=0){
 			alert('Invalid download size:' +dlSize)
 			return;
@@ -183,6 +186,15 @@ function saveConf() {
 		alert("Achtung: Die Grenzen müssen Ganzzahlen sein!")
 		return
 	}
+	
+	var samplingint = parseInt($('#samplingint').val())
+	var samplingavr = parseInt($('#samplingavr').val())
+	var loggingint = parseInt($('#loggingint').val())
+	
+	if (isNaN(samplingint) || isNaN(samplingavr) || isNaN(loggingint) ) {
+		alert("Achtung: Bitte Ganzzahlen Intervallen und Mittelung eingeben!")
+		return
+	}
 	var msg = {
 			command : "setConf",
 			zerocal : (	$( "#zerocal" ).prop( "checked" )?1:0),
@@ -203,6 +215,9 @@ function saveConf() {
 			low: low,
 			high: high,
 			blink: blink,
+			samplingint: samplingint,
+			samplingavr: samplingavr,
+			loggingint: loggingint,
 			ampel_start : parseInt($('#ampel_start').val()),
 			ampel_end : parseInt($('#ampel_end').val()),
 			ampel_mode : parseInt($('#ampel_mode').val()),

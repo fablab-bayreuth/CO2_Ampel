@@ -5,7 +5,7 @@ String mes; //global String!
 uint8_t sd_buffer[1024];
 char char_buffer[50]; //global Buffer for chars
 
-#define CONFIG_SIGNATURE 0xfab1ab30
+#define CONFIG_SIGNATURE 0xfab1ab31
 
 struct MyCONFIG
 {
@@ -22,6 +22,9 @@ struct MyCONFIG
   int ampel_start; //minutes
   int ampel_end; //minutes
   uint8_t ampel_mode; // 0 -> full stripe , 1 -> full stripe continuous, 2 -> ampel
+  int samplingint;
+  int samplingavr;
+  int loggingint;
   char client_ssid[30];
   char client_pw[30];
   char hostname[30];
@@ -73,6 +76,9 @@ void eraseConfig() {
   cfg.low = 1000;
   cfg.high = 1500;
   cfg.blink = 2000;
+  cfg.samplingint = SAMPLING_INT;
+  cfg.samplingavr = 10;
+  cfg.loggingint = 100;
   cfg.ampel_start = 360;
   cfg.ampel_end = 1080;
   cfg.ampel_mode = 0;

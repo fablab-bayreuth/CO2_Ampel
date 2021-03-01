@@ -55,7 +55,7 @@ void handleSensor(void)
 {
   device.lastCO2 = millis();
   // Measurements
-  if (device.co2_count == CO2_ARRAY_LEN) {
+  if (device.co2_count >= cfg.samplingavr) {
     device.co2_sum -= device.co2[device.co2_index];
     device.co2_count--;
   }
@@ -67,7 +67,7 @@ void handleSensor(void)
   device.co2_sum += device.co2[device.co2_index];
   device.co2_count++;
   device.co2_index++;
-  if (device.co2_index == CO2_ARRAY_LEN) device.co2_index = 0;
+  if (device.co2_index >= cfg.samplingavr) device.co2_index = 0;
   device.co2_current = device.co2_sum / device.co2_count;
   sendCO2();
 
@@ -77,7 +77,7 @@ void handleSensor(void)
   handleLED();
 
   //Save Data
-  if ((millis() - device.lastData) > (1000 * SAMPLING_INT * CO2_ARRAY_LEN)) {
+  if ((millis() - device.lastData) > (1000 * cfg.loggingint)) {
     device.lastData = millis();
     client.startDataFrame(BayEOS_Int16le);
     client.addChannelValue(device.co2_current);
