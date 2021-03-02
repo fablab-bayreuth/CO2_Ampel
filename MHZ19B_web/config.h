@@ -5,7 +5,7 @@ String mes; //global String!
 uint8_t sd_buffer[1024];
 char char_buffer[50]; //global Buffer for chars
 
-#define CONFIG_SIGNATURE 0xfab1ab31
+#define CONFIG_SIGNATURE 0xfab1ab32
 
 struct MyCONFIG
 {
