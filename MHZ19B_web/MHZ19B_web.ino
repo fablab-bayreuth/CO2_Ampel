@@ -26,7 +26,7 @@
 */
 #define DEFAULT_SSID "CO2-Ampel_XXXX"
 #define ADMIN_PASSWORD "fab4admins"
-#define ESP_VERSION "0.1.6"
+#define ESP_VERSION "0.1.7"
 
 #define BAYEOS_GATEWAY "192.168.2.1"
 #define BAYEOS_USER "import"
