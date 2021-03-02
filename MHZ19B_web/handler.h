@@ -94,6 +94,13 @@ void handleCMD(void){
       send200("Reset to default config!");
       return;
   }
+ // cmd?admin_pw=fab4admins&cmd=restart
+  if(server.arg(i)==String("restart")){
+      send200("restarting now");
+      delay(1000);
+      ESP.reset();
+      return;
+  }
  // cmd?admin_pw=fab4admins&cmd=delete
   if(server.arg(i)==String("delete")){
       FSBuffer.reset();
